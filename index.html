@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Examiner — Login</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { display: flex; min-height: 100vh; }
+
+    .login-left {
+      flex: 0 0 420px;
+      background: var(--primary);
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: flex-start;
+      padding: 3rem;
+      position: relative; overflow: hidden;
+    }
+    .login-left::before {
+      content: '';
+      position: absolute; top: -80px; right: -80px;
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, rgba(224,123,18,0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .login-left::after {
+      content: '';
+      position: absolute; bottom: -60px; left: -60px;
+      width: 240px; height: 240px;
+      background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .brand-logo {
+      font-size: 2.2rem; font-weight: 800;
+      letter-spacing: -0.04em; color: #fff;
+      margin-bottom: 1.5rem;
+    }
+    .brand-logo span { color: var(--accent-2); }
+    .brand-tagline {
+      color: rgba(255,255,255,0.65); font-size: 1rem; line-height: 1.7;
+      max-width: 280px;
+    }
+    .brand-features { margin-top: 2.5rem; display: flex; flex-direction: column; gap: 0.9rem; }
+    .feature-item {
+      display: flex; align-items: center; gap: 0.75rem;
+      color: rgba(255,255,255,0.75); font-size: 0.875rem;
+    }
+    .feature-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: rgba(255,255,255,0.08);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0;
+    }
+
+    .login-right {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      padding: 2rem;
+    }
+    .login-card {
+      width: 100%; max-width: 400px;
+      background: var(--card);
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+    .login-tabs {
+      display: flex; border-bottom: 1px solid var(--border);
+    }
+    .login-tab {
+      flex: 1; padding: 1rem; text-align: center;
+      font-weight: 600; font-size: 0.9rem; cursor: pointer;
+      background: var(--bg); color: var(--muted);
+      border: none; transition: var(--t);
+    }
+    .login-tab.active {
+      background: var(--card); color: var(--accent);
+      border-bottom: 2px solid var(--accent);
+    }
+    .login-body { padding: 1.75rem; }
+
+    .divider {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 1.1rem 0;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .divider span { font-size: 0.75rem; color: var(--muted); }
+
+    .btn-google {
+      width: 100%; background: var(--card);
+      border: 1.5px solid var(--border);
+      color: var(--text); font-weight: 600; font-size: 0.9rem;
+      padding: 0.65rem 1rem; border-radius: var(--r-sm);
+      display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+      cursor: pointer; transition: var(--t);
+    }
+    .btn-google:hover { background: var(--bg); border-color: var(--border-2); }
+    .google-icon { width: 18px; height: 18px; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .login-left { flex: none; padding: 2rem; min-height: auto; }
+      .login-left .brand-features { display: none; }
+      .login-right { padding: 1.5rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Left branding panel -->
+<div class="login-left">
+  <div class="brand-logo">Exam<span>iner</span></div>
+  <p class="brand-tagline">A secure, real-time online quiz system for modern classrooms.</p>
+  <div class="brand-features">
+    <div class="feature-item">
+      <div class="feature-icon">⏱</div>
+      <span>Server-enforced 10-minute timer</span>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">🔀</div>
+      <span>Randomized questions per student</span>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">🔒</div>
+      <span>Email allowlist — no unauthorized access</span>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">📊</div>
+      <span>Instant auto-grading & analytics</span>
+    </div>
+  </div>
+</div>
+
+<!-- Right login panel -->
+<div class="login-right">
+  <div class="login-card">
+    <div class="login-tabs">
+      <button class="login-tab active" id="tab-signin" onclick="switchTab('signin')">Sign In</button>
+      <button class="login-tab"        id="tab-signup" onclick="switchTab('signup')">Create Account</button>
+    </div>
+
+    <div class="login-body">
+      <!-- Sign In Panel -->
+      <div id="panel-signin" class="panel active">
+        <h3 style="margin-bottom:1.25rem">Welcome back</h3>
+        <div id="signin-error" class="alert alert-danger hidden" style="margin-bottom:1rem"></div>
+
+        <button class="btn-google" id="btn-google-signin">
+          <svg class="google-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Continue with Google
+        </button>
+
+        <div class="divider"><span>or sign in with email</span></div>
+
+        <form id="form-signin" onsubmit="handleSignIn(event)">
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-input" id="signin-email" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" id="signin-password" placeholder="Enter password" required>
+          </div>
+          <a href="#" onclick="handleForgotPassword(event)" style="font-size:0.8rem;color:var(--text-2);display:block;margin-bottom:1rem;text-align:right">Forgot password?</a>
+          <button type="submit" class="btn btn-primary btn-full btn-lg" id="btn-signin">
+            Sign In →
+          </button>
+        </form>
+      </div>
+
+      <!-- Sign Up Panel -->
+      <div id="panel-signup" class="panel">
+        <h3 style="margin-bottom:0.4rem">Create your account</h3>
+        <p class="text-sm text-muted" style="margin-bottom:1.25rem">Your email must be pre-approved by your teacher.</p>
+        <div id="signup-error" class="alert alert-danger hidden" style="margin-bottom:1rem"></div>
+        <div id="signup-success" class="alert alert-success hidden" style="margin-bottom:1rem"></div>
+
+        <button class="btn-google" id="btn-google-signup">
+          <svg class="google-icon" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Sign up with Google
+        </button>
+
+        <div class="divider"><span>or register with email</span></div>
+
+        <form id="form-signup" onsubmit="handleSignUp(event)">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" class="form-input" id="signup-name" placeholder="Your full name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-input" id="signup-email" placeholder="your.approved@email.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" id="signup-password" placeholder="At least 6 characters" minlength="6" required>
+          </div>
+          <button type="submit" class="btn btn-accent btn-full btn-lg" id="btn-signup">
+            Create Account →
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+<script src="js/config.js"></script>
+<script>
+// ─── Redirect if already logged in ───────────────────────────
+auth.onAuthStateChanged(async user => {
+  if (!user) return;
+  if (isTeacher(user.email)) {
+    window.location.href = 'dashboard.html';
+  } else {
+    // Check allowlist
+    try {
+      const doc = await db.collection('allowedEmails').doc(user.email.toLowerCase()).get();
+      if (doc.exists) {
+        window.location.href = 'quiz.html';
+      } else {
+        await auth.signOut();
+      }
+    } catch(e) {
+      // Network issue, try anyway
+      if (isTeacher(user.email)) window.location.href = 'dashboard.html';
+      else window.location.href = 'quiz.html';
+    }
+  }
+});
+
+function switchTab(tab) {
+  document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  document.getElementById(`panel-${tab}`).classList.add('active');
+}
+
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.textContent = loading ? 'Please wait…' : (btnId === 'btn-signin' ? 'Sign In →' : 'Create Account →');
+}
+
+async function handleSignIn(e) {
+  e.preventDefault();
+  const email    = document.getElementById('signin-email').value.trim();
+  const password = document.getElementById('signin-password').value;
+  const errEl    = document.getElementById('signin-error');
+  errEl.classList.add('hidden');
+  setLoading('btn-signin', true);
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    // onAuthStateChanged handles redirect
+  } catch(err) {
+    errEl.textContent = friendlyError(err.code);
+    errEl.classList.remove('hidden');
+    setLoading('btn-signin', false);
+  }
+}
+
+async function handleSignUp(e) {
+  e.preventDefault();
+  const name     = document.getElementById('signup-name').value.trim();
+  const email    = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const errEl    = document.getElementById('signup-error');
+  const okEl     = document.getElementById('signup-success');
+  errEl.classList.add('hidden'); okEl.classList.add('hidden');
+  setLoading('btn-signup', true);
+
+  try {
+    // Check allowlist FIRST before creating auth account
+    if (!isTeacher(email)) {
+      const allowed = await db.collection('allowedEmails').doc(email.toLowerCase()).get();
+      if (!allowed.exists) {
+        throw { code: 'auth/not-allowed', message: 'This email is not on the approved list. Contact your teacher.' };
+      }
+    }
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    await cred.user.updateProfile({ displayName: name });
+    okEl.textContent = 'Account created! Redirecting…';
+    okEl.classList.remove('hidden');
+    // onAuthStateChanged handles redirect
+  } catch(err) {
+    errEl.textContent = err.message || friendlyError(err.code);
+    errEl.classList.remove('hidden');
+    setLoading('btn-signup', false);
+  }
+}
+
+// Google Sign-In
+async function handleGoogleAuth() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    await auth.signInWithPopup(provider);
+    // onAuthStateChanged handles redirect
+  } catch(err) {
+    showToast(friendlyError(err.code), 'error');
+  }
+}
+document.getElementById('btn-google-signin').onclick = handleGoogleAuth;
+document.getElementById('btn-google-signup').onclick = handleGoogleAuth;
+
+async function handleForgotPassword(e) {
+  e.preventDefault();
+  const email = document.getElementById('signin-email').value.trim();
+  if (!email) { showToast('Enter your email first', 'warning'); return; }
+  try {
+    await auth.sendPasswordResetEmail(email);
+    showToast('Password reset email sent!', 'success');
+  } catch(err) {
+    showToast(friendlyError(err.code), 'error');
+  }
+}
+
+function friendlyError(code) {
+  const map = {
+    'auth/user-not-found':        'No account found with this email.',
+    'auth/wrong-password':        'Incorrect password.',
+    'auth/email-already-in-use':  'An account already exists with this email.',
+    'auth/weak-password':         'Password should be at least 6 characters.',
+    'auth/invalid-email':         'Please enter a valid email address.',
+    'auth/too-many-requests':     'Too many attempts. Please try again later.',
+    'auth/network-request-failed':'Network error. Check your connection.',
+    'auth/not-allowed':           'This email is not approved. Contact your teacher.',
+    'auth/popup-closed-by-user':  'Sign-in window was closed.',
+  };
+  return map[code] || 'Something went wrong. Please try again.';
+}
+</script>
+</body>
+</html>

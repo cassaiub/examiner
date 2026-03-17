@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ─────────────────────────────────────────
+    function isAuthed()  { return request.auth != null; }
+    function email()     { return request.auth.token.email.lower(); }
+    function isOwner(e)  { return isAuthed() && email() == e.lower(); }
+
+    // Teacher check — matches config.js TEACHER_EMAILS
+    // Add all teacher emails here (lowercase)
+    function isTeacher() {
+      return isAuthed() && (
+        email() == "kasad@iub.edu.bd"
+        // Add more teachers:
+        // || email() == "uddinsa@iub.edu.bd"
+      );
+    }
+
+    // ── Config (quiz settings) ───────────────────────────────────
+    match /config/{configId} {
+      allow read:  if isAuthed();   // Students need to read duration
+      allow write: if isTeacher();
+    }
+
+    // ── Allowed emails ───────────────────────────────────────────
+    match /allowedEmails/{emailDoc} {
+      // Students can only read their own allowlist entry
+      allow read:  if isOwner(emailDoc) || isTeacher();
+      allow write: if isTeacher();
+    }
+
+    // ── Question bank ────────────────────────────────────────────
+    // Questions are NEVER sent to the client directly.
+    // Cloud Functions use the Admin SDK (bypasses these rules).
+    match /questions/{questionId} {
+      allow read:  if isTeacher();  // Only teacher reads via client
+      allow write: if isTeacher();
+    }
+
+    // ── Quiz sessions ────────────────────────────────────────────
+    match /quizSessions/{sessionId} {
+      // Students can read their own session (for page refresh)
+      allow read: if isTeacher() ||
+                     (isAuthed() && resource.data.studentEmail.lower() == email());
+
+      // Students can only update the `answers` field, nothing else.
+      // Cannot set submitted=true from client — only Cloud Function does that.
+      allow update: if isAuthed() &&
+                       resource.data.studentEmail.lower() == email() &&
+                       resource.data.submitted == false &&
+                       request.resource.data.submitted == false &&
+                       request.resource.data.diff(resource.data)
+                         .affectedKeys()
+                         .hasOnly(['answers']);
+
+      // Only Cloud Functions (Admin SDK) can create sessions
+      allow create: if false;
+      allow delete: if isTeacher();
+    }
+
+    // ── Results ──────────────────────────────────────────────────
+    match /results/{resultId} {
+      // Students can read their own result
+      allow read: if isTeacher() ||
+                     (isAuthed() && resource.data.studentEmail.lower() == email());
+
+      // Only Cloud Functions write results
+      allow write: if false;
+    }
+  }
+}
