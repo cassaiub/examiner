@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Examiner — Quiz</title>
+  <title>CASSA Examiner — Quiz</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
     body { background: var(--bg); min-height: 100vh; }
@@ -178,13 +178,14 @@
 
 <!-- Header -->
 <header class="quiz-header">
-  <div class="quiz-brand">Exam<span>iner</span></div>
+  <div class="quiz-brand">CASSA<span>Examiner</span></div>
   <div class="quiz-meta">
     <span class="student-info" id="student-name-display">Loading…</span>
     <div id="timer-wrap" style="display:none">
       <div class="timer-display" id="timer-display">--:--</div>
       <span class="timer-label">remaining</span>
     </div>
+    <button class="btn btn-ghost btn-sm" style="color:rgba(255,255,255,0.75);font-size:0.75rem" onclick="signOut()" id="btn-logout">Logout ↩</button>
   </div>
 </header>
 
@@ -719,6 +720,14 @@ function showError(title, msg) {
   document.getElementById('error-title').textContent = title;
   document.getElementById('error-msg').textContent   = msg;
   showScreen('error');
+}
+
+async function signOut() {
+  if (sessionId && !submitted) {
+    if (!await confirmDialog('Are you sure you want to logout? Your progress will be saved but the timer will keep running.')) return;
+  }
+  await auth.signOut();
+  window.location.href = 'index.html';
 }
 </script>
 </body>

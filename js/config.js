@@ -26,7 +26,7 @@ const TEACHER_EMAILS = [
 const APP_CONFIG = {
   quizDurationMinutes: 10,
   questionsPerQuiz: 15,
-  appName: "Examiner",
+  appName: "CASSA Examiner",
   institutionName: "Your Institution"
 };
 
