@@ -135,6 +135,7 @@
                 <th>#</th>
                 <th>Student</th>
                 <th>Email</th>
+                <th>Section</th>
                 <th onclick="sortTable('score')" style="cursor:pointer">Score ↕</th>
                 <th onclick="sortTable('correctCount')" style="cursor:pointer">Correct ↕</th>
                 <th onclick="sortTable('timeTakenSeconds')" style="cursor:pointer">Time ↕</th>
@@ -305,6 +306,7 @@ function renderTable(data) {
       <td data-label="#">${i + 1}</td>
       <td data-label="Student"><strong>${r.studentName || '—'}</strong></td>
       <td data-label="Email" style="color:var(--text-2);font-size:0.82rem">${r.studentEmail}</td>
+      <td data-label="Section" style="font-size:0.82rem">${r.studentSection || '—'}</td>
       <td data-label="Score"><span class="score-pill score-${grade}">${r.score}%</span></td>
       <td data-label="Correct" style="font-family:var(--mono)">${r.correctCount} / ${r.totalQuestions}</td>
       <td data-label="Time" style="font-family:var(--mono)">${formatTime(r.timeTakenSeconds||0)}</td>
@@ -319,7 +321,7 @@ function filterTable() {
   const q    = document.getElementById('search-input').value.toLowerCase();
   const grade = document.getElementById('filter-score').value;
   let filtered = allResults.filter(r => {
-    const matchQ = !q || (r.studentName||'').toLowerCase().includes(q) || r.studentEmail.toLowerCase().includes(q);
+    const matchQ = !q || (r.studentName||'').toLowerCase().includes(q) || r.studentEmail.toLowerCase().includes(q) || (r.studentSection||'').toLowerCase().includes(q);
     const matchG = !grade ||
       (grade === 'a' && r.score >= 80) ||
       (grade === 'b' && r.score >= 65 && r.score < 80) ||
@@ -342,6 +344,7 @@ function openDetail(r) {
 
   const statsRows = [
     { key: 'Email',       val: r.studentEmail },
+    { key: 'Section',     val: r.studentSection || '—' },
     { key: 'Score',       val: `${r.score}%` },
     { key: 'Points',      val: `${r.earnedPoints} / ${r.totalPoints}` },
     { key: 'Correct',     val: `${r.correctCount} / ${r.totalQuestions}` },
@@ -371,10 +374,11 @@ function closeDetail() { document.getElementById('detail-modal').classList.add('
 // ─── Export CSV ──────────────────────────────────────────────
 function exportCSV() {
   if (allResults.length === 0) { showToast('No data to export', 'warning'); return; }
-  const headers = ['Name','Email','Score (%)','Correct','Total Questions','Time (s)','Submitted','Status'];
+  const headers = ['Name','Email','Section','Score (%)','Correct','Total Questions','Time (s)','Submitted','Status'];
   const rows = allResults.map(r => [
     `"${r.studentName||''}"`,
     `"${r.studentEmail}"`,
+    `"${r.studentSection||''}"`,
     r.score, r.correctCount, r.totalQuestions,
     r.timeTakenSeconds||0,
     `"${formatDate(r.submittedAt)}"`,

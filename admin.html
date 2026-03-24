@@ -360,6 +360,10 @@
         <label class="form-label">Email Address</label>
         <input type="email" class="form-input" id="email-addr" placeholder="student@example.com">
       </div>
+      <div class="form-group">
+        <label class="form-label">Section Number</label>
+        <input type="text" class="form-input" id="email-section" placeholder="e.g. 1 or 2">
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('modal-email')">Cancel</button>
@@ -930,7 +934,7 @@ function renderEmails() {
         <input type="checkbox" class="email-select" data-id="${e.id}" onclick="updateBulkDeleteBtn()">
         <div class="email-info">
           <span class="email-addr">${e.name || 'Unknown'}</span>
-          <span class="email-meta">${e.id}</span>
+          <span class="email-meta">${e.id}${e.section ? ` · Sec ${e.section}` : ''}</span>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:0.5rem">
@@ -982,15 +986,22 @@ async function deleteSelectedStudents() {
 function openAddEmail() {
   document.getElementById('email-name').value = '';
   document.getElementById('email-addr').value = '';
+  document.getElementById('email-section').value = '';
   openModal('modal-email');
 }
 
 async function saveEmail() {
-  const name  = document.getElementById('email-name').value.trim();
-  const email = document.getElementById('email-addr').value.trim().toLowerCase();
+  const name    = document.getElementById('email-name').value.trim();
+  const email   = document.getElementById('email-addr').value.trim().toLowerCase();
+  const section = document.getElementById('email-section').value.trim();
   if (!email || !email.includes('@')) { showToast('Enter a valid email', 'error'); return; }
   try {
-    await db.collection('allowedEmails').doc(email).set({ name: name || email, role: 'student', addedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await db.collection('allowedEmails').doc(email).set({ 
+      name: name || email, 
+      section: section || null,
+      role: 'student', 
+      addedAt: firebase.firestore.FieldValue.serverTimestamp() 
+    });
     showToast(`${email} added!`, 'success');
     closeModal('modal-email');
     await loadEmails();
@@ -1041,7 +1052,7 @@ function openEmailImportModal() {
     <div class="alert alert-info">
       <div>
         <strong>CSV Format for Students:</strong><br>
-        <code style="font-size:0.78rem">name,email</code>
+        <code style="font-size:0.78rem">name,email,section</code>
       </div>
     </div>`;
   document.getElementById('import-topic-row').classList.add('hidden');
@@ -1070,9 +1081,13 @@ function handleCSVFile(event) {
     } else {
       parsed = lines.slice(1).map(line => {
         const cols = parseCSVLine(line);
-        return { name: cols[0]?.trim(), email: cols[1]?.trim().toLowerCase() };
+        return { 
+          name: cols[0]?.trim(), 
+          email: cols[1]?.trim().toLowerCase(),
+          section: cols[2]?.trim() || null
+        };
       }).filter(e => e.email && e.email.includes('@'));
-      preview = parsed.map(e => `${e.name} <${e.email}>`).join('\n');
+      preview = parsed.map(e => `${e.name} <${e.email}> ${e.section ? `[Sec ${e.section}]` : ''}`).join('\n');
     }
 
     importData = parsed;
@@ -1114,7 +1129,12 @@ async function confirmImport() {
     } else {
       importData.forEach(e => {
         const ref = db.collection('allowedEmails').doc(e.email);
-        batch.set(ref, { name: e.name, role: 'student', addedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        batch.set(ref, { 
+          name: e.name, 
+          section: e.section || null,
+          role: 'student', 
+          addedAt: firebase.firestore.FieldValue.serverTimestamp() 
+        });
       });
     }
     await batch.commit();

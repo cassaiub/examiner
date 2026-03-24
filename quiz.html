@@ -453,9 +453,15 @@ async function startQuiz(topicId) {
     durationMs  = data.durationMinutes * 60 * 1000;
     answers     = data.answers || {};
 
-    // Show topic label in quiz header
+    // Show topic and section label in quiz header
     if (data.topicName) {
       document.getElementById('quiz-topic-label').textContent = `Topic: ${data.topicName}`;
+    }
+    if (data.studentSection) {
+      const nameEl = document.getElementById('student-name-display');
+      if (!nameEl.textContent.includes('Sec')) {
+          nameEl.textContent += ` [Sec ${data.studentSection}]`;
+      }
     }
 
     // If already submitted, show results
