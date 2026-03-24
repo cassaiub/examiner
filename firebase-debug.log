@@ -1,0 +1,47 @@
+[debug] [2026-03-24T12:31:53.593Z] ----------------------------------------------------------------------
+[debug] [2026-03-24T12:31:53.594Z] Command:       /home/asad/.nvm/versions/node/v20.20.1/bin/node /usr/local/bin/firebase serve --only hosting
+[debug] [2026-03-24T12:31:53.594Z] CLI Version:   15.10.1
+[debug] [2026-03-24T12:31:53.594Z] Platform:      linux
+[debug] [2026-03-24T12:31:53.594Z] Node Version:  v20.20.1
+[debug] [2026-03-24T12:31:53.594Z] Time:          Tue Mar 24 2026 18:31:53 GMT+0600 (Bangladesh Standard Time)
+[debug] [2026-03-24T12:31:53.594Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-03-24T12:31:53.595Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-03-24T12:31:54.367Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-03-24T12:31:54.367Z] > authorizing via signed-in user (iubcassa@gmail.com)
+[debug] [2026-03-24T12:31:54.367Z] [iam] checking project cassaquiz for permissions ["firebase.projects.get"]
+[debug] [2026-03-24T12:31:54.368Z] Checked if tokens are valid: false, expires at: 1773753497924
+[debug] [2026-03-24T12:31:54.368Z] Checked if tokens are valid: false, expires at: 1773753497924
+[debug] [2026-03-24T12:31:54.368Z] > refreshing access token with scopes: []
+[debug] [2026-03-24T12:31:54.368Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-03-24T12:31:54.368Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-03-24T12:31:54.616Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-03-24T12:31:54.617Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-03-24T12:31:54.621Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/cassaquiz:testIamPermissions [none]
+[debug] [2026-03-24T12:31:54.621Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/cassaquiz:testIamPermissions  x-goog-user-project=cassaquiz
+[debug] [2026-03-24T12:31:54.621Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/cassaquiz:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2026-03-24T12:31:55.022Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-03-24T12:31:55.022Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2026-03-24T12:31:56.035Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/cassaquiz:testIamPermissions 200
+[debug] [2026-03-24T12:31:56.035Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/cassaquiz:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2026-03-24T12:31:56.036Z] Checked if tokens are valid: true, expires at: 1774359113617
+[debug] [2026-03-24T12:31:56.036Z] Checked if tokens are valid: true, expires at: 1774359113617
+[debug] [2026-03-24T12:31:56.036Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/cassaquiz [none]
+[debug] [2026-03-24T12:31:56.369Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/cassaquiz 200
+[debug] [2026-03-24T12:31:56.369Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/cassaquiz {"projectNumber":"618377087169","projectId":"cassaquiz","lifecycleState":"ACTIVE","name":"cassaquiz","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2026-03-17T10:55:35.622272Z","parent":{"type":"organization","id":"2251426910"}}
+[debug] [2026-03-24T12:31:56.371Z] Checked if tokens are valid: true, expires at: 1774359113617
+[debug] [2026-03-24T12:31:56.371Z] Checked if tokens are valid: true, expires at: 1774359113617
+[debug] [2026-03-24T12:31:56.371Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/cassaquiz/sites 
+[debug] [2026-03-24T12:31:57.696Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/cassaquiz/sites 200
+[debug] [2026-03-24T12:31:57.696Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/cassaquiz/sites {"sites":[{"name":"projects/cassaquiz/sites/cassaquiz","defaultUrl":"https://cassaquiz.web.app","appId":"1:618377087169:web:ec2d67506b76a41a2aac40","type":"DEFAULT_SITE"}]}
+[debug] [2026-03-24T12:31:57.697Z] Checked if tokens are valid: true, expires at: 1774359113617
+[debug] [2026-03-24T12:31:57.697Z] Checked if tokens are valid: true, expires at: 1774359113617
+[debug] [2026-03-24T12:31:57.697Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/cassaquiz/webApps/1:618377087169:web:ec2d67506b76a41a2aac40/config [none]
+[debug] [2026-03-24T12:31:58.859Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/cassaquiz/webApps/1:618377087169:web:ec2d67506b76a41a2aac40/config 200
+[debug] [2026-03-24T12:31:58.859Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/cassaquiz/webApps/1:618377087169:web:ec2d67506b76a41a2aac40/config {"projectId":"cassaquiz","appId":"1:618377087169:web:ec2d67506b76a41a2aac40","storageBucket":"cassaquiz.firebasestorage.app","apiKey":"AIzaSyA0CgD5YX4yQLvD06cNTLxQz6c713CoZOE","authDomain":"cassaquiz.firebaseapp.com","messagingSenderId":"618377087169","measurementId":"G-J84EB80XJ2","projectNumber":"618377087169","version":"2"}
+[debug] [2026-03-24T12:31:58.868Z] Checked if tokens are valid: true, expires at: 1774359113617
+[debug] [2026-03-24T12:31:58.868Z] Checked if tokens are valid: true, expires at: 1774359113617
+[debug] [2026-03-24T12:31:58.869Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/cassaquiz [none]
+[debug] [2026-03-24T12:31:59.273Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/cassaquiz 200
+[debug] [2026-03-24T12:31:59.273Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/cassaquiz {"projectId":"cassaquiz","projectNumber":"618377087169","displayName":"cassaquiz","name":"projects/cassaquiz","resources":{"hostingSite":"cassaquiz"},"state":"ACTIVE","etag":"1_ee92d739-b356-4a93-bc42-bdd541204d97"}
+[info] ✔  hosting[cassaquiz]: Local server: http://localhost:5000 {"metadata":{"emulator":{"name":"hosting"},"message":"Local server: http://localhost:5000"}}

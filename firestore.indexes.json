@@ -4,32 +4,27 @@
       "collectionGroup": "quizSessions",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "studentUid",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "submitted",
-          "order": "ASCENDING"
-        }
+        { "fieldPath": "studentUid", "order": "ASCENDING" },
+        { "fieldPath": "submitted",  "order": "ASCENDING" }
       ]
     },
     {
       "collectionGroup": "quizSessions",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "studentUid",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "submitted",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "submittedAt",
-          "order": "DESCENDING"
-        }
+        { "fieldPath": "studentUid",  "order": "ASCENDING" },
+        { "fieldPath": "submitted",   "order": "ASCENDING" },
+        { "fieldPath": "submittedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "quizSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "studentUid",  "order": "ASCENDING" },
+        { "fieldPath": "submitted",   "order": "ASCENDING" },
+        { "fieldPath": "topicId",     "order": "ASCENDING" },
+        { "fieldPath": "submittedAt", "order": "DESCENDING" }
       ]
     }
   ],

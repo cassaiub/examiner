@@ -51,6 +51,35 @@
       transition: var(--t); color: var(--muted);
     }
     .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
+
+    /* Topic styles */
+    .topic-item {
+      border: 1px solid var(--border); border-radius: var(--r-sm); padding: 1rem 1.1rem;
+      margin-bottom: 0.6rem; background: var(--bg);
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .topic-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--accent); flex-shrink: 0;
+    }
+    .topic-dot.inactive { background: var(--muted); }
+    .topic-info { flex: 1; min-width: 0; }
+    .topic-name { font-size: 0.92rem; font-weight: 700; }
+    .topic-desc { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
+    .topic-settings { font-size: 0.75rem; color: var(--text-2); margin-top: 0.2rem; }
+    .topic-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+    /* Topic filter tabs */
+    .topic-tabs {
+      display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem;
+    }
+    .topic-tab {
+      padding: 0.3rem 0.8rem; border-radius: 99px; font-size: 0.8rem; font-weight: 600;
+      border: 1.5px solid var(--border); background: var(--bg); cursor: pointer;
+      transition: var(--t); color: var(--text-2);
+    }
+    .topic-tab:hover { border-color: var(--accent); color: var(--accent); }
+    .topic-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
   </style>
 </head>
 <body>
@@ -76,15 +105,15 @@
 
       <div class="page-header">
         <h1>Admin Panel</h1>
-        <p>Manage questions, student access, and quiz settings.</p>
+        <p>Manage topics, questions, student access, and quiz settings.</p>
       </div>
 
-      <!-- ── Quiz Settings ──────────────────────────────── -->
+      <!-- ── Global Quiz Settings ───────────────────────────── -->
       <div class="section-card">
         <div class="section-head">
           <div>
-            <h3>⚙️ Quiz Settings</h3>
-            <p class="text-sm text-muted mt-1">Configure duration and question count.</p>
+            <h3>⚙️ Global Quiz Settings</h3>
+            <p class="text-sm text-muted mt-1">Default duration and question count (can be overridden per topic).</p>
           </div>
           <button class="btn btn-accent btn-sm" onclick="saveSettings()">Save Settings</button>
         </div>
@@ -103,7 +132,35 @@
         </div>
       </div>
 
-      <!-- ── Question Bank ──────────────────────────────── -->
+      <!-- ── Courses ────────────────────────────────────────── -->
+      <div class="section-card">
+        <div class="section-head">
+          <div>
+            <h3>🎓 Courses</h3>
+            <p class="text-sm text-muted mt-1"><span id="course-count">0</span> courses — group topics by course.</p>
+          </div>
+          <button class="btn btn-accent btn-sm" onclick="openAddCourse()">+ Add Course</button>
+        </div>
+        <div class="section-body">
+          <div id="courses-list"><div class="empty-msg">No courses yet. Add courses to organize your topics.</div></div>
+        </div>
+      </div>
+
+      <!-- ── Topics ─────────────────────────────────────────── -->
+      <div class="section-card">
+        <div class="section-head">
+          <div>
+            <h3>🏷️ Quiz Topics</h3>
+            <p class="text-sm text-muted mt-1"><span id="topic-count">0</span> topics — students choose a topic before starting.</p>
+          </div>
+          <button class="btn btn-accent btn-sm" onclick="openAddTopic()">+ Add Topic</button>
+        </div>
+        <div class="section-body">
+          <div id="topics-list"><div class="empty-msg">No topics yet. Add topics to let students choose what to be tested on.</div></div>
+        </div>
+      </div>
+
+      <!-- ── Question Bank ──────────────────────────────────── -->
       <div class="section-card">
         <div class="section-head">
           <div>
@@ -116,11 +173,13 @@
           </div>
         </div>
         <div class="section-body">
+          <!-- Topic filter tabs -->
+          <div id="q-topic-tabs" class="topic-tabs" style="display:none"></div>
           <div id="questions-list"><div class="empty-msg">No questions yet. Add your first question above.</div></div>
         </div>
       </div>
 
-      <!-- ── Allowed Emails ─────────────────────────────── -->
+      <!-- ── Allowed Emails ─────────────────────────────────── -->
       <div class="section-card">
         <div class="section-head">
           <div>
@@ -128,16 +187,23 @@
             <p class="text-sm text-muted mt-1"><span id="email-count">0</span> approved emails</p>
           </div>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <button class="btn btn-danger btn-sm hidden" id="btn-bulk-delete-emails" onclick="deleteSelectedStudents()">🗑 Delete Selected</button>
             <button class="btn btn-outline btn-sm" onclick="openEmailImportModal()">⬆ Import CSV</button>
             <button class="btn btn-accent btn-sm" onclick="openAddEmail()">+ Add Email</button>
           </div>
         </div>
         <div class="section-body">
+          <div id="emails-bulk-actions" class="hidden" style="margin-bottom:0.75rem;padding-left:0.5rem">
+            <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;cursor:pointer">
+              <input type="checkbox" id="select-all-emails" onclick="toggleSelectAllStudents()">
+              <span>Select All</span>
+            </label>
+          </div>
           <div id="emails-list"><div class="empty-msg">No students added yet.</div></div>
         </div>
       </div>
 
-      <!-- ── Danger Zone ────────────────────────────────── -->
+      <!-- ── Danger Zone ────────────────────────────────────── -->
       <div class="section-card" style="border-color:#fca5a5">
         <div class="section-head" style="background:#fff5f5">
           <div>
@@ -155,7 +221,75 @@
   </div>
 </div>
 
-<!-- Add/Edit Question Modal -->
+<!-- ── Course Modal ──────────────────────────────────────────── -->
+<div id="modal-course" class="modal-backdrop hidden">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-header">
+      <h3 id="modal-course-title">Add Course</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-course')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-course-id">
+      <div class="form-group">
+        <label class="form-label">Course Name <span style="color:var(--danger)">*</span></label>
+        <input type="text" class="form-input" id="course-name" placeholder="e.g. Computer Science, Mathematics…">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-course')">Cancel</button>
+      <button class="btn btn-accent" id="btn-save-course" onclick="saveCourse()">Save Course</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Topic Modal ──────────────────────────────────────────── -->
+<div id="modal-topic" class="modal-backdrop hidden">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-header">
+      <h3 id="modal-topic-title">Add Topic</h3>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-topic')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-topic-id">
+      <div class="form-group">
+        <label class="form-label">Course <span style="color:var(--danger)">*</span></label>
+        <select class="form-input" id="topic-course">
+          <option value="">— Select a course —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Topic Name <span style="color:var(--danger)">*</span></label>
+        <input type="text" class="form-input" id="topic-name" placeholder="e.g. Data Structures, Networking…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+        <input type="text" class="form-input" id="topic-desc" placeholder="Brief description for students">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Duration (min) <span style="font-weight:400;color:var(--muted)">— blank = global</span></label>
+          <input type="number" class="form-input" id="topic-duration" min="1" max="180" placeholder="e.g. 20">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label class="form-label">Questions <span style="font-weight:400;color:var(--muted)">— blank = global</span></label>
+          <input type="number" class="form-input" id="topic-numq" min="1" max="200" placeholder="e.g. 10">
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:0.75rem;margin-bottom:0">
+        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.88rem">
+          <input type="checkbox" id="topic-active" checked style="width:16px;height:16px;cursor:pointer">
+          Active (visible to students)
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-topic')">Cancel</button>
+      <button class="btn btn-accent" id="btn-save-topic" onclick="saveTopic()">Save Topic</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add/Edit Question Modal ─────────────────────────────── -->
 <div id="modal-question" class="modal-backdrop hidden">
   <div class="modal-box">
     <div class="modal-header">
@@ -164,6 +298,18 @@
     </div>
     <div class="modal-body">
       <input type="hidden" id="edit-q-id">
+      <div class="form-group">
+        <label class="form-label">Course <span style="color:var(--danger)">*</span></label>
+        <select class="form-input" id="q-course" onchange="updateTopicDropdownForQuestion()">
+          <option value="">— Select a course —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Topic <span style="color:var(--danger)">*</span></label>
+        <select class="form-input" id="q-topic">
+          <option value="">— Select a topic —</option>
+        </select>
+      </div>
       <div class="form-group">
         <label class="form-label">Question Text</label>
         <textarea class="form-input" id="q-text" placeholder="Enter the question…" required></textarea>
@@ -198,7 +344,7 @@
   </div>
 </div>
 
-<!-- Add Email Modal -->
+<!-- ── Add Email Modal ──────────────────────────────────────── -->
 <div id="modal-email" class="modal-backdrop hidden">
   <div class="modal-box" style="max-width:420px">
     <div class="modal-header">
@@ -222,7 +368,7 @@
   </div>
 </div>
 
-<!-- CSV Import Modal -->
+<!-- ── CSV Import Modal ─────────────────────────────────────── -->
 <div id="modal-import" class="modal-backdrop hidden">
   <div class="modal-box" style="max-width:520px">
     <div class="modal-header">
@@ -231,6 +377,13 @@
     </div>
     <div class="modal-body">
       <div id="import-instructions"></div>
+      <!-- Topic selector for question imports -->
+      <div id="import-topic-row" class="form-group mt-2 hidden">
+        <label class="form-label">Assign to Topic <span style="color:var(--danger)">*</span></label>
+        <select class="form-input" id="import-topic-select">
+          <option value="">— Select a topic —</option>
+        </select>
+      </div>
       <div class="drop-zone mt-2" id="drop-zone" onclick="document.getElementById('csv-input').click()">
         <div style="font-size:2rem;margin-bottom:0.5rem">📄</div>
         <p>Click to upload CSV, or drag & drop</p>
@@ -258,10 +411,13 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
 <script src="js/config.js"></script>
 <script>
-let questions   = [];
-let emails      = [];
-let importMode  = 'questions'; // or 'emails'
-let importData  = null;
+let questions        = [];
+let emails           = [];
+let topics           = [];
+let courses          = [];
+let importMode       = 'questions'; // or 'emails'
+let importData       = null;
+let activeTopicFilter = null; // null = show all
 
 // ─── Auth guard ──────────────────────────────────────────────
 auth.onAuthStateChanged(user => {
@@ -273,7 +429,7 @@ auth.onAuthStateChanged(user => {
 // ─── Load everything ─────────────────────────────────────────
 async function loadAll() {
   try {
-    await Promise.all([loadQuestions(), loadEmails(), loadSettings()]);
+    await Promise.all([loadCourses(), loadTopics(), loadQuestions(), loadEmails(), loadSettings()]);
     document.getElementById('screen-loading').style.display = 'none';
     document.getElementById('screen-main').classList.remove('hidden');
   } catch(err) {
@@ -300,7 +456,305 @@ async function saveSettings() {
   } catch(e) { showToast('Save failed: ' + e.message, 'error'); }
 }
 
-// ─── Questions CRUD ──────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+//  COURSES CRUD
+// ══════════════════════════════════════════════════════════════
+
+async function loadCourses() {
+  const snap = await db.collection('courses').orderBy('createdAt', 'asc').get();
+  courses = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderCourses();
+  populateCourseDropdowns();
+}
+
+function renderCourses() {
+  const el    = document.getElementById('courses-list');
+  const count = document.getElementById('course-count');
+  count.textContent = courses.length;
+  if (courses.length === 0) {
+    el.innerHTML = '<div class="empty-msg">No courses yet. Add courses to organize your topics.</div>';
+    return;
+  }
+  el.innerHTML = '';
+  courses.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'topic-item'; // Reuse topic item style
+    div.innerHTML = `
+      <div class="topic-dot"></div>
+      <div class="topic-info">
+        <div class="topic-name">${c.name}</div>
+      </div>
+      <div class="topic-actions">
+        <button class="btn btn-ghost btn-icon btn-sm" title="Edit" onclick="openEditCourse('${c.id}')">✏️</button>
+        <button class="btn btn-ghost btn-icon btn-sm" title="Delete" onclick="deleteCourse('${c.id}')">🗑</button>
+      </div>`;
+    el.appendChild(div);
+  });
+}
+
+function populateCourseDropdowns() {
+  const tCourseSelect = document.getElementById('topic-course');
+  const qCourseSelect = document.getElementById('q-course');
+  [tCourseSelect, qCourseSelect].forEach(select => {
+    select.innerHTML = '<option value="">— Select a course —</option>';
+    courses.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      select.appendChild(opt);
+    });
+  });
+}
+
+function openAddCourse() {
+  document.getElementById('modal-course-title').textContent = 'Add Course';
+  document.getElementById('edit-course-id').value = '';
+  document.getElementById('course-name').value = '';
+  openModal('modal-course');
+}
+
+function openEditCourse(id) {
+  const c = courses.find(c => c.id === id);
+  if (!c) return;
+  document.getElementById('modal-course-title').textContent = 'Edit Course';
+  document.getElementById('edit-course-id').value = id;
+  document.getElementById('course-name').value = c.name || '';
+  openModal('modal-course');
+}
+
+async function saveCourse() {
+  const id   = document.getElementById('edit-course-id').value;
+  const name = document.getElementById('course-name').value.trim();
+  if (!name) { showToast('Course name is required', 'error'); return; }
+
+  const data = {
+    name,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  const btn = document.getElementById('btn-save-course');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    if (id) {
+      await db.collection('courses').doc(id).update(data);
+      showToast('Course updated!', 'success');
+    } else {
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('courses').add(data);
+      showToast('Course added!', 'success');
+    }
+    closeModal('modal-course');
+    await loadCourses();
+    await loadTopics(); // Refresh topic display if course name changed
+  } catch(e) { showToast('Save failed: ' + e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Save Course'; }
+}
+
+async function deleteCourse(id) {
+  const c = courses.find(c => c.id === id);
+  const tCount = topics.filter(t => t.courseId === id).length;
+  const warn = tCount > 0 ? ` This will NOT delete the ${tCount} topic(s) assigned to it — they will become unassigned.` : '';
+  if (!await confirmDialog(`Delete course "${c?.name}"?${warn}`)) return;
+  await db.collection('courses').doc(id).delete();
+  showToast('Course deleted', 'success');
+  await loadCourses();
+  await loadTopics();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TOPICS CRUD
+// ══════════════════════════════════════════════════════════════
+
+async function loadTopics() {
+  const snap = await db.collection('topics').orderBy('createdAt', 'asc').get();
+  topics = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderTopics();
+  renderTopicTabs();
+  populateTopicDropdowns();
+}
+
+function renderTopics() {
+  const el    = document.getElementById('topics-list');
+  const count = document.getElementById('topic-count');
+  count.textContent = topics.length;
+  if (topics.length === 0) {
+    el.innerHTML = '<div class="empty-msg">No topics yet. Add topics to let students choose what to be tested on.</div>';
+    return;
+  }
+  el.innerHTML = '';
+  topics.forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'topic-item';
+    const settingsText = [];
+    if (t.durationMinutes) settingsText.push(`⏱ ${t.durationMinutes} min`);
+    if (t.numQuestions)    settingsText.push(`📝 ${t.numQuestions} questions`);
+    if (settingsText.length === 0) settingsText.push('Uses global settings');
+    const courseName = courses.find(c => c.id === t.courseId)?.name;
+    div.innerHTML = `
+      <div class="topic-dot${t.active === false ? ' inactive' : ''}"></div>
+      <div class="topic-info">
+        <div class="topic-name">${t.name} ${courseName ? `<span class="badge badge-neutral" style="font-weight:400;margin-left:0.5rem">${courseName}</span>` : ''}</div>
+        ${t.description ? `<div class="topic-desc">${t.description}</div>` : ''}
+        <div class="topic-settings">${settingsText.join(' &nbsp;·&nbsp; ')} ${t.active === false ? '&nbsp;·&nbsp; <span style="color:var(--muted)">Hidden from students</span>' : ''}</div>
+      </div>
+      <div class="topic-actions">
+        <button class="btn btn-ghost btn-icon btn-sm" title="Edit" onclick="openEditTopic('${t.id}')">✏️</button>
+        <button class="btn btn-ghost btn-icon btn-sm" title="Delete" onclick="deleteTopic('${t.id}')">🗑</button>
+      </div>`;
+    el.appendChild(div);
+  });
+}
+
+function renderTopicTabs() {
+  const tabsEl = document.getElementById('q-topic-tabs');
+  if (topics.length === 0) { tabsEl.style.display = 'none'; return; }
+  tabsEl.style.display = 'flex';
+  tabsEl.innerHTML = '';
+
+  // "All" tab
+  const allTab = document.createElement('div');
+  allTab.className = 'topic-tab' + (activeTopicFilter === null ? ' active' : '');
+  allTab.textContent = 'All';
+  allTab.onclick = () => { activeTopicFilter = null; renderTopicTabs(); renderQuestions(); };
+  tabsEl.appendChild(allTab);
+
+  // One tab per topic
+  topics.forEach(t => {
+    const tab = document.createElement('div');
+    tab.className = 'topic-tab' + (activeTopicFilter === t.id ? ' active' : '');
+    tab.textContent = t.name;
+    tab.onclick = () => { activeTopicFilter = t.id; renderTopicTabs(); renderQuestions(); };
+    tabsEl.appendChild(tab);
+  });
+
+  // "Unassigned" tab
+  const uTab = document.createElement('div');
+  uTab.className = 'topic-tab' + (activeTopicFilter === '__unassigned__' ? ' active' : '');
+  uTab.textContent = 'Unassigned';
+  uTab.onclick = () => { activeTopicFilter = '__unassigned__'; renderTopicTabs(); renderQuestions(); };
+  tabsEl.appendChild(uTab);
+}
+
+function populateTopicDropdowns() {
+  // Question modal dropdown (course-filtered one is separate)
+  const qSelect = document.getElementById('q-topic');
+  qSelect.innerHTML = '<option value="">— No topic (unassigned) —</option>';
+  topics.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value       = t.id;
+    opt.textContent = t.name;
+    qSelect.appendChild(opt);
+  });
+
+  // Import modal dropdown
+  const impSelect = document.getElementById('import-topic-select');
+  impSelect.innerHTML = '<option value="">— No topic (unassigned) —</option>';
+  topics.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value       = t.id;
+    opt.textContent = t.name;
+    impSelect.appendChild(opt);
+  });
+}
+
+function updateTopicDropdownForQuestion() {
+  const courseId = document.getElementById('q-course').value;
+  const qSelect  = document.getElementById('q-topic');
+  qSelect.innerHTML = '<option value="">— Select a topic —</option>';
+  
+  const filteredTopics = courseId ? topics.filter(t => t.courseId === courseId) : topics;
+  
+  filteredTopics.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.name;
+    qSelect.appendChild(opt);
+  });
+}
+
+
+function openAddTopic() {
+  document.getElementById('modal-topic-title').textContent = 'Add Topic';
+  document.getElementById('edit-topic-id').value  = '';
+  document.getElementById('topic-name').value     = '';
+  document.getElementById('topic-desc').value     = '';
+  document.getElementById('topic-duration').value = '';
+  document.getElementById('topic-numq').value     = '';
+  document.getElementById('topic-active').checked = true;
+  document.getElementById('topic-course').value   = '';
+  openModal('modal-topic');
+}
+
+function openEditTopic(id) {
+  const t = topics.find(t => t.id === id);
+  if (!t) return;
+  document.getElementById('modal-topic-title').textContent = 'Edit Topic';
+  document.getElementById('edit-topic-id').value  = id;
+  document.getElementById('topic-name').value     = t.name || '';
+  document.getElementById('topic-desc').value     = t.description || '';
+  document.getElementById('topic-duration').value = t.durationMinutes || '';
+  document.getElementById('topic-numq').value     = t.numQuestions    || '';
+  document.getElementById('topic-active').checked = t.active !== false;
+  document.getElementById('topic-course').value   = t.courseId || '';
+  openModal('modal-topic');
+}
+
+async function saveTopic() {
+  const id   = document.getElementById('edit-topic-id').value;
+  const name = document.getElementById('topic-name').value.trim();
+  const courseId = document.getElementById('topic-course').value || null;
+  if (!name) { showToast('Topic name is required', 'error'); return; }
+  if (!courseId) { showToast('Please select a course', 'error'); return; }
+
+  const dur  = parseInt(document.getElementById('topic-duration').value) || null;
+  const numq = parseInt(document.getElementById('topic-numq').value)     || null;
+
+  const data = {
+    name,
+    description:     document.getElementById('topic-desc').value.trim() || null,
+    durationMinutes: dur,
+    numQuestions:    numq,
+    active:          document.getElementById('topic-active').checked,
+    courseId,
+    updatedAt:       firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  const btn = document.getElementById('btn-save-topic');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try {
+    if (id) {
+      await db.collection('topics').doc(id).update(data);
+      showToast('Topic updated!', 'success');
+    } else {
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('topics').add(data);
+      showToast('Topic added!', 'success');
+    }
+    closeModal('modal-topic');
+    await loadTopics();
+    renderQuestions(); // refresh with updated topic names
+  } catch(e) { showToast('Save failed: ' + e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Save Topic'; }
+}
+
+async function deleteTopic(id) {
+  const t = topics.find(t => t.id === id);
+  const qCount = questions.filter(q => q.topicId === id).length;
+  const warn = qCount > 0 ? ` This will NOT delete the ${qCount} question(s) assigned to it — they will become unassigned.` : '';
+  if (!await confirmDialog(`Delete topic "${t?.name}"?${warn}`)) return;
+  await db.collection('topics').doc(id).delete();
+  showToast('Topic deleted', 'success');
+  if (activeTopicFilter === id) activeTopicFilter = null;
+  await loadTopics();
+  renderQuestions();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  QUESTIONS CRUD
+// ══════════════════════════════════════════════════════════════
+
 async function loadQuestions() {
   const snap = await db.collection('questions').orderBy('createdAt', 'asc').get();
   questions  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -311,10 +765,27 @@ function renderQuestions() {
   const el    = document.getElementById('questions-list');
   const count = document.getElementById('q-count');
   count.textContent = questions.length;
-  if (questions.length === 0) { el.innerHTML = '<div class="empty-msg">No questions yet.</div>'; return; }
+
+  // Apply topic filter
+  let filtered = questions;
+  if (activeTopicFilter === '__unassigned__') {
+    filtered = questions.filter(q => !q.topicId);
+  } else if (activeTopicFilter) {
+    filtered = questions.filter(q => q.topicId === activeTopicFilter);
+  }
+
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="empty-msg">No questions' +
+      (activeTopicFilter ? ' in this topic' : '') + '.</div>';
+    return;
+  }
+
   const letters = ['A','B','C','D','E','F'];
   el.innerHTML = '';
-  questions.forEach((q, i) => {
+  filtered.forEach((q, i) => {
+    const topic = topics.find(t => t.id === q.topicId);
+    const topicName = topic?.name;
+    const courseName = q.courseName || courses.find(c => c.id === topic?.courseId)?.name;
     const div = document.createElement('div');
     div.className = 'question-item';
     div.innerHTML = `
@@ -324,7 +795,11 @@ function renderQuestions() {
         <div class="q-opts">${q.options.map((o,oi) =>
           `<span class="${oi===q.correctIndex?'correct':''}">${letters[oi]}. ${o}${oi===q.correctIndex?' ✓':''}</span>`
         ).join(' &nbsp;·&nbsp; ')}</div>
-        <div style="margin-top:0.3rem"><span class="badge badge-neutral">${q.points||1} pt${(q.points||1)!==1?'s':''}</span></div>
+        <div style="margin-top:0.3rem;display:flex;gap:0.4rem;flex-wrap:wrap">
+          <span class="badge badge-neutral">${q.points||1} pt${(q.points||1)!==1?'s':''}</span>
+          ${courseName ? `<span class="badge badge-outline">${courseName}</span>` : ''}
+          ${topicName ? `<span class="badge badge-accent">${topicName}</span>` : '<span class="badge" style="background:var(--bg2);color:var(--muted)">Unassigned</span>'}
+        </div>
       </div>
       <div class="q-actions">
         <button class="btn btn-ghost btn-icon btn-sm" title="Edit" onclick="openEditQuestion('${q.id}')">✏️</button>
@@ -341,6 +816,18 @@ function openAddQuestion() {
   ['0','1','2','3'].forEach(i => document.getElementById(`q-opt-${i}`).value = '');
   document.getElementById('q-correct').value = '0';
   document.getElementById('q-points').value  = '1';
+  
+  // Set course and trigger topic filter
+  let initialCourseId = '';
+  if (activeTopicFilter && activeTopicFilter !== '__unassigned__') {
+    const t = topics.find(t => t.id === activeTopicFilter);
+    if (t) initialCourseId = t.courseId || '';
+  }
+  document.getElementById('q-course').value = initialCourseId;
+  updateTopicDropdownForQuestion();
+  
+  document.getElementById('q-topic').value =
+    (activeTopicFilter && activeTopicFilter !== '__unassigned__') ? activeTopicFilter : '';
   openModal('modal-question');
 }
 
@@ -353,6 +840,13 @@ function openEditQuestion(id) {
   q.options.forEach((o,i) => document.getElementById(`q-opt-${i}`).value = o);
   document.getElementById('q-correct').value   = q.correctIndex;
   document.getElementById('q-points').value    = q.points || 1;
+  
+  // Set course, then update topics, then set topic
+  const topic = topics.find(t => t.id === q.topicId);
+  document.getElementById('q-course').value = topic?.courseId || '';
+  updateTopicDropdownForQuestion();
+  document.getElementById('q-topic').value  = q.topicId || '';
+  
   openModal('modal-question');
 }
 
@@ -362,11 +856,21 @@ async function saveQuestion() {
   const options = ['0','1','2','3'].map(i => document.getElementById(`q-opt-${i}`).value.trim());
   const correct = parseInt(document.getElementById('q-correct').value);
   const points  = parseInt(document.getElementById('q-points').value) || 1;
+  const topicId = document.getElementById('q-topic').value || null;
 
   if (!text || options.some(o => !o)) { showToast('Fill in all fields', 'error'); return; }
 
-  const data = { text, options, correctIndex: correct, points, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
-  const btn  = document.getElementById('btn-save-q');
+  const topicName = topics.find(t => t.id === topicId)?.name || null;
+  const courseId  = document.getElementById('q-course').value || null;
+  const courseName = courses.find(c => c.id === courseId)?.name || null;
+  
+  const data = {
+    text, options, correctIndex: correct, points,
+    topicId, topicName,
+    courseId, courseName,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+  const btn = document.getElementById('btn-save-q');
   btn.disabled = true; btn.textContent = 'Saving…';
 
   try {
@@ -391,7 +895,10 @@ async function deleteQuestion(id) {
   await loadQuestions();
 }
 
-// ─── Emails CRUD ─────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+//  EMAILS CRUD
+// ══════════════════════════════════════════════════════════════
+
 async function loadEmails() {
   const snap = await db.collection('allowedEmails').get();
   emails = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -402,15 +909,29 @@ function renderEmails() {
   const el    = document.getElementById('emails-list');
   const count = document.getElementById('email-count');
   count.textContent = emails.length;
-  if (emails.length === 0) { el.innerHTML = '<div class="empty-msg">No students added yet.</div>'; return; }
+  
+  const bulkActions = document.getElementById('emails-bulk-actions');
+  const bulkDelete  = document.getElementById('btn-bulk-delete-emails');
+  
+  if (emails.length === 0) {
+    el.innerHTML = '<div class="empty-msg">No students added yet.</div>';
+    bulkActions.classList.add('hidden');
+    bulkDelete.classList.add('hidden');
+    return;
+  }
+  
+  bulkActions.classList.remove('hidden');
   el.innerHTML = '';
   emails.forEach(e => {
     const div = document.createElement('div');
     div.className = 'email-item';
     div.innerHTML = `
-      <div class="email-info">
-        <span class="email-addr">${e.name || 'Unknown'}</span>
-        <span class="email-meta">${e.id}</span>
+      <div style="display:flex;align-items:center;gap:0.9rem">
+        <input type="checkbox" class="email-select" data-id="${e.id}" onclick="updateBulkDeleteBtn()">
+        <div class="email-info">
+          <span class="email-addr">${e.name || 'Unknown'}</span>
+          <span class="email-meta">${e.id}</span>
+        </div>
       </div>
       <div style="display:flex;align-items:center;gap:0.5rem">
         ${e.role==='teacher' ? '<span class="badge badge-accent">Teacher</span>' : '<span class="badge badge-neutral">Student</span>'}
@@ -418,7 +939,45 @@ function renderEmails() {
       </div>`;
     el.appendChild(div);
   });
+  updateBulkDeleteBtn();
 }
+
+function updateBulkDeleteBtn() {
+  const selected = document.querySelectorAll('.email-select:checked');
+  const btn = document.getElementById('btn-bulk-delete-emails');
+  if (selected.length > 0) btn.classList.remove('hidden'); else btn.classList.add('hidden');
+  
+  const all = document.querySelectorAll('.email-select');
+  document.getElementById('select-all-emails').checked = (selected.length === all.length && all.length > 0);
+}
+
+function toggleSelectAllStudents() {
+  const checked = document.getElementById('select-all-emails').checked;
+  document.querySelectorAll('.email-select').forEach(cb => cb.checked = checked);
+  updateBulkDeleteBtn();
+}
+
+async function deleteSelectedStudents() {
+  const selected = Array.from(document.querySelectorAll('.email-select:checked')).map(cb => cb.dataset.id);
+  if (selected.length === 0) return;
+  
+  if (!await confirmDialog(`Delete ${selected.length} student(s) permanently?`)) return;
+  
+  const btn = document.getElementById('btn-bulk-delete-emails');
+  btn.disabled = true; btn.textContent = 'Deleting…';
+  
+  try {
+    const batch = db.batch();
+    selected.forEach(email => {
+      batch.delete(db.collection('allowedEmails').doc(email));
+    });
+    await batch.commit();
+    showToast(`${selected.length} students removed`, 'success');
+    await loadEmails();
+  } catch(e) { showToast('Batch delete failed: ' + e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = '🗑 Delete Selected'; }
+}
+
 
 function openAddEmail() {
   document.getElementById('email-name').value = '';
@@ -445,7 +1004,10 @@ async function deleteEmail(email) {
   await loadEmails();
 }
 
-// ─── CSV Import ───────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+//  CSV IMPORT
+// ══════════════════════════════════════════════════════════════
+
 function openImportModal() {
   importMode = 'questions';
   importData = null;
@@ -458,6 +1020,13 @@ function openImportModal() {
         <span style="font-size:0.78rem">correct_index: 0=A, 1=B, 2=C, 3=D &nbsp;|&nbsp; points: optional (default 1)</span>
       </div>
     </div>`;
+  // Show topic selector
+  if (topics.length > 0) {
+    document.getElementById('import-topic-row').classList.remove('hidden');
+    document.getElementById('import-topic-select').value = '';
+  } else {
+    document.getElementById('import-topic-row').classList.add('hidden');
+  }
   document.getElementById('import-preview').classList.add('hidden');
   document.getElementById('btn-import-confirm').disabled = true;
   document.getElementById('csv-input').value = '';
@@ -475,6 +1044,7 @@ function openEmailImportModal() {
         <code style="font-size:0.78rem">name,email</code>
       </div>
     </div>`;
+  document.getElementById('import-topic-row').classList.add('hidden');
   document.getElementById('import-preview').classList.add('hidden');
   document.getElementById('btn-import-confirm').disabled = true;
   document.getElementById('csv-input').value = '';
@@ -492,7 +1062,7 @@ function handleCSVFile(event) {
     let preview = '';
 
     if (importMode === 'questions') {
-      parsed = lines.slice(1).map((line, i) => {
+      parsed = lines.slice(1).map(line => {
         const cols = parseCSVLine(line);
         return { text: cols[0], options: [cols[1],cols[2],cols[3],cols[4]], correctIndex: parseInt(cols[5])||0, points: parseInt(cols[6])||1 };
       }).filter(q => q.text && q.options.every(o => o));
@@ -535,9 +1105,11 @@ async function confirmImport() {
   try {
     const batch = db.batch();
     if (importMode === 'questions') {
+      const topicId   = document.getElementById('import-topic-select').value || null;
+      const topicName = topics.find(t => t.id === topicId)?.name || null;
       importData.forEach(q => {
         const ref = db.collection('questions').doc();
-        batch.set(ref, { ...q, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        batch.set(ref, { ...q, topicId, topicName, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
       });
     } else {
       importData.forEach(e => {
@@ -563,7 +1135,10 @@ dropZone.addEventListener('drop', e => {
   if (file) { const dt = new DataTransfer(); dt.items.add(file); document.getElementById('csv-input').files = dt.files; handleCSVFile({ target: { files: [file] } }); }
 });
 
-// ─── Danger Zone ─────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+//  DANGER ZONE
+// ══════════════════════════════════════════════════════════════
+
 async function clearAllSessions() {
   if (!await confirmDialog('Delete ALL quiz sessions? This cannot be undone.')) return;
   const snap = await db.collection('quizSessions').get();

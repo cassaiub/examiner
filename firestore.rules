@@ -68,5 +68,14 @@ service cloud.firestore {
       // Only Cloud Functions write results
       allow write: if false;
     }
+
+    // ── Topics ───────────────────────────────────────────────────
+    // All authenticated users (students included) can read topics
+    // so the quiz page can display the topic selection screen.
+    // Only teachers can create, update, or delete topics.
+    match /topics/{topicId} {
+      allow read:  if isAuthed();
+      allow write: if isTeacher();
+    }
   }
 }

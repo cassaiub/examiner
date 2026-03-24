@@ -1,14 +1,14 @@
 /**
  * EXAMINER — Firebase Cloud Functions
- * 
+ *
  * Functions:
- *  - assignQuiz       : Randomly pick questions, create a session for a student
+ *  - assignQuiz       : Randomly pick questions for a topic, create a session
  *  - gradeQuiz        : Grade a session and save results
  *  - autoGradeExpired : Scheduled — runs every minute to auto-grade timed-out sessions
  */
 
-const functions  = require('firebase-functions');
-const admin      = require('firebase-admin');
+const functions = require('firebase-functions');
+const admin     = require('firebase-admin');
 admin.initializeApp();
 
 const db = admin.firestore();
@@ -25,10 +25,10 @@ function shuffle(arr) {
 
 // ─── Helper: grade a session (shared logic) ──────────────────
 async function gradeSession(session, sessionId) {
-  const now       = admin.firestore.Timestamp.now();
-  const startMs   = session.startTime.toMillis();
+  const now        = admin.firestore.Timestamp.now();
+  const startMs    = session.startTime.toMillis();
   const durationMs = session.durationMinutes * 60 * 1000;
-  const elapsed   = now.toMillis() - startMs;
+  const elapsed    = now.toMillis() - startMs;
   const timeExpired = elapsed > (durationMs + 30000); // 30s grace
 
   // Fetch all question docs in parallel
@@ -66,18 +66,20 @@ async function gradeSession(session, sessionId) {
 
   const result = {
     sessionId,
-    studentEmail:      session.studentEmail,
-    studentName:       session.studentName || session.studentEmail,
-    studentUid:        session.studentUid,
+    studentEmail:     session.studentEmail,
+    studentName:      session.studentName || session.studentEmail,
+    studentUid:       session.studentUid,
     score,
     earnedPoints,
     totalPoints,
-    timeTakenSeconds:  Math.round(timeTaken / 1000),
-    submittedAt:       now,
+    timeTakenSeconds: Math.round(timeTaken / 1000),
+    submittedAt:      now,
     timeExpired,
     breakdown,
-    totalQuestions:    session.questionIds.length,
-    correctCount:      correctCnt,
+    totalQuestions:   session.questionIds.length,
+    correctCount:     correctCnt,
+    topicId:          session.topicId   || null,
+    topicName:        session.topicName || null,
   };
 
   // Write result + mark session submitted atomically
@@ -94,7 +96,7 @@ async function gradeSession(session, sessionId) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  1. assignQuiz — called when student opens quiz.html
+//  1. assignQuiz — called when student selects a topic
 // ══════════════════════════════════════════════════════════════
 exports.assignQuiz = functions.https.onCall(async (data, context) => {
   // ── Auth check ────────────────────────────────────────────
@@ -102,17 +104,34 @@ exports.assignQuiz = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('unauthenticated', 'You must be logged in.');
   }
 
-  const uid   = context.auth.uid;
-  const email = (context.auth.token.email || '').toLowerCase();
+  const uid     = context.auth.uid;
+  const email   = (context.auth.token.email || '').toLowerCase();
+  const topicId = data.topicId || null;
 
   // ── Allowlist check ───────────────────────────────────────
   const allowedDoc = await db.collection('allowedEmails').doc(email).get();
   if (!allowedDoc.exists) {
-    throw new functions.https.HttpsError('permission-denied', 'Your email is not on the approved list. Contact your teacher.');
+    throw new functions.https.HttpsError(
+      'permission-denied',
+      'Your email is not on the approved list. Contact your teacher.'
+    );
   }
   const studentName = allowedDoc.data().name || email;
 
-  // ── Check for existing active session ────────────────────
+  // ── Validate topic (if provided) ─────────────────────────
+  let topicData = null;
+  if (topicId) {
+    const topicDoc = await db.collection('topics').doc(topicId).get();
+    if (!topicDoc.exists || topicDoc.data().active === false) {
+      throw new functions.https.HttpsError(
+        'not-found',
+        'The selected topic is not available. Please choose another.'
+      );
+    }
+    topicData = topicDoc.data();
+  }
+
+  // ── Check for existing active (unsubmitted) session ───────
   const existingSnap = await db.collection('quizSessions')
     .where('studentUid', '==', uid)
     .where('submitted', '==', false)
@@ -123,48 +142,67 @@ exports.assignQuiz = functions.https.onCall(async (data, context) => {
     const existingDoc  = existingSnap.docs[0];
     const existingData = existingDoc.data();
 
-    // Check if it's expired but not yet graded
-    const now      = Date.now();
-    const startMs  = existingData.startTime.toMillis();
-    const durMs    = existingData.durationMinutes * 60 * 1000;
+    const now     = Date.now();
+    const startMs = existingData.startTime.toMillis();
+    const durMs   = existingData.durationMinutes * 60 * 1000;
+
     if (now > startMs + durMs + 30000) {
       // Auto-grade expired session
       const result = await gradeSession(existingData, existingDoc.id);
       return {
-        sessionId:  existingDoc.id,
-        submitted:  true,
-        score:      result.score,
-        breakdown:  result.breakdown,
-        earnedPoints:   result.earnedPoints,
-        totalPoints:    result.totalPoints,
+        sessionId:        existingDoc.id,
+        submitted:        true,
+        score:            result.score,
+        breakdown:        result.breakdown,
+        earnedPoints:     result.earnedPoints,
+        totalPoints:      result.totalPoints,
         timeTakenSeconds: result.timeTakenSeconds,
-        totalQuestions: result.totalQuestions,
-        correctCount:   result.correctCount,
-        timeExpired:    result.timeExpired,
+        totalQuestions:   result.totalQuestions,
+        correctCount:     result.correctCount,
+        timeExpired:      result.timeExpired,
+        topicName:        result.topicName,
       };
     }
 
-    // Return existing live session (student refreshed the page)
-    return {
-      sessionId:        existingDoc.id,
-      questions:        existingData.clientQuestions,
-      startTime:        existingData.startTime.toMillis(),
-      durationMinutes:  existingData.durationMinutes,
-      answers:          existingData.answers || {},
-      submitted:        false,
-    };
+    // Same topic (or no topic filter) → resume existing session
+    if (!topicId || existingData.topicId === topicId) {
+      return {
+        sessionId:       existingDoc.id,
+        questions:       existingData.clientQuestions,
+        startTime:       existingData.startTime.toMillis(),
+        durationMinutes: existingData.durationMinutes,
+        answers:         existingData.answers || {},
+        submitted:       false,
+        topicId:         existingData.topicId  || null,
+        topicName:       existingData.topicName || null,
+      };
+    }
+
+    // Different topic → block until current quiz is finished
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      `You have an active quiz on "${existingData.topicName || 'another topic'}". Please finish it first.`
+    );
   }
 
-  // ── Check for already submitted session today ─────────────
-  const submittedSnap = await db.collection('quizSessions')
+  // ── Check for already submitted session for THIS topic ────
+  // Students may take one quiz per topic. Show them their result
+  // if they already completed this topic.
+  let submittedQuery = db.collection('quizSessions')
     .where('studentUid', '==', uid)
-    .where('submitted', '==', true)
+    .where('submitted', '==', true);
+
+  if (topicId) {
+    submittedQuery = submittedQuery.where('topicId', '==', topicId);
+  }
+
+  const submittedSnap = await submittedQuery
     .orderBy('submittedAt', 'desc')
     .limit(1)
     .get();
 
   if (!submittedSnap.empty) {
-    const sd = submittedSnap.docs[0];
+    const sd        = submittedSnap.docs[0];
     const resultDoc = await db.collection('results').doc(sd.id).get();
     if (resultDoc.exists) {
       const r = resultDoc.data();
@@ -179,32 +217,44 @@ exports.assignQuiz = functions.https.onCall(async (data, context) => {
         totalQuestions:   r.totalQuestions,
         correctCount:     r.correctCount,
         timeExpired:      r.timeExpired,
+        topicName:        r.topicName || null,
       };
     }
   }
 
-  // ── Fetch quiz config ─────────────────────────────────────
+  // ── Fetch quiz config (global defaults) ───────────────────
   const configDoc = await db.collection('config').doc('quiz').get();
   const config    = configDoc.exists ? configDoc.data() : {};
-  const numQ      = Math.max(1, config.numQuestions    || 15);
-  const durationM = Math.max(1, config.durationMinutes || 10);
 
-  // ── Fetch question bank ───────────────────────────────────
-  const questionsSnap = await db.collection('questions').get();
+  // Topic-specific settings override global defaults
+  const numQ      = Math.max(1, (topicData && topicData.numQuestions)    || config.numQuestions    || 15);
+  const durationM = Math.max(1, (topicData && topicData.durationMinutes) || config.durationMinutes || 10);
+
+  // ── Fetch question bank (filtered by topic if provided) ───
+  let questionsQuery = db.collection('questions');
+  if (topicId) {
+    questionsQuery = questionsQuery.where('topicId', '==', topicId);
+  }
+  const questionsSnap = await questionsQuery.get();
   const allQuestions  = questionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   if (allQuestions.length === 0) {
-    throw new functions.https.HttpsError('failed-precondition', 'The question bank is empty. Ask your teacher to add questions.');
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      topicId
+        ? `No questions found for "${(topicData && topicData.name) || topicId}". Ask your teacher to add questions.`
+        : 'The question bank is empty. Ask your teacher to add questions.'
+    );
   }
   if (allQuestions.length < numQ) {
-    functions.logger.warn(`Only ${allQuestions.length} questions available, wanted ${numQ}. Using all.`);
+    functions.logger.warn(
+      `Topic "${topicId || 'all'}": only ${allQuestions.length} questions available, wanted ${numQ}. Using all.`
+    );
   }
 
   // ── Randomize and select ──────────────────────────────────
-  const selected = shuffle(allQuestions).slice(0, Math.min(numQ, allQuestions.length));
-
-  // Shuffle options within each question (optional but recommended)
-  const questionIds    = selected.map(q => q.id);
+  const selected        = shuffle(allQuestions).slice(0, Math.min(numQ, allQuestions.length));
+  const questionIds     = selected.map(q => q.id);
   // clientQuestions NEVER include correctIndex — that stays server-side
   const clientQuestions = selected.map(q => ({
     id:      q.id,
@@ -214,23 +264,27 @@ exports.assignQuiz = functions.https.onCall(async (data, context) => {
   }));
 
   // ── Create session ────────────────────────────────────────
-  const sessionRef  = db.collection('quizSessions').doc();
-  const startTime   = admin.firestore.Timestamp.now();
+  const sessionRef = db.collection('quizSessions').doc();
+  const startTime  = admin.firestore.Timestamp.now();
 
   await sessionRef.set({
-    studentEmail:     email,
-    studentUid:       uid,
+    studentEmail:    email,
+    studentUid:      uid,
     studentName,
     questionIds,
     clientQuestions,
-    answers:          {},
+    answers:         {},
     startTime,
-    durationMinutes:  durationM,
-    submitted:        false,
-    createdAt:        startTime,
+    durationMinutes: durationM,
+    submitted:       false,
+    createdAt:       startTime,
+    topicId:         topicId                        || null,
+    topicName:       (topicData && topicData.name)  || null,
   });
 
-  functions.logger.info(`Quiz assigned to ${email}: session ${sessionRef.id}, ${selected.length} questions`);
+  functions.logger.info(
+    `Quiz assigned to ${email}: session ${sessionRef.id}, topic: ${topicId || 'all'}, ${selected.length} questions`
+  );
 
   return {
     sessionId:       sessionRef.id,
@@ -239,6 +293,8 @@ exports.assignQuiz = functions.https.onCall(async (data, context) => {
     durationMinutes: durationM,
     answers:         {},
     submitted:       false,
+    topicId:         topicId                       || null,
+    topicName:       (topicData && topicData.name) || null,
   };
 });
 
@@ -284,6 +340,7 @@ exports.gradeQuiz = functions.https.onCall(async (data, context) => {
         totalQuestions:   r.totalQuestions,
         timeExpired:      r.timeExpired,
         breakdown:        r.breakdown,
+        topicName:        r.topicName || null,
       };
     }
   }
@@ -301,6 +358,7 @@ exports.gradeQuiz = functions.https.onCall(async (data, context) => {
     totalQuestions:   result.totalQuestions,
     timeExpired:      result.timeExpired,
     breakdown:        result.breakdown,
+    topicName:        result.topicName || null,
   };
 });
 
@@ -319,10 +377,10 @@ exports.autoGradeExpired = functions
 
     let graded = 0;
     for (const doc of snap.docs) {
-      const session  = doc.data();
-      const startMs  = session.startTime.toMillis();
-      const durMs    = session.durationMinutes * 60 * 1000;
-      const elapsed  = now.toMillis() - startMs;
+      const session = doc.data();
+      const startMs = session.startTime.toMillis();
+      const durMs   = session.durationMinutes * 60 * 1000;
+      const elapsed = now.toMillis() - startMs;
 
       // Grace period: 60 seconds after timer ends
       if (elapsed > durMs + 60000) {

@@ -39,27 +39,56 @@
     .timer-label { font-size: 0.65rem; opacity: 0.6; display: block; text-align:center; margin-top: -2px; }
 
     /* ── Progress Bar ────────────────────────────────────── */
-    .progress-bar-wrap {
-      background: var(--bg2); height: 4px;
-    }
-    .progress-bar-fill {
-      height: 100%; background: var(--accent);
-      transition: width 0.4s ease;
-    }
+    .progress-bar-wrap { background: var(--bg2); height: 4px; }
+    .progress-bar-fill { height: 100%; background: var(--accent); transition: width 0.4s ease; }
 
     /* ── Main Content ────────────────────────────────────── */
-    .quiz-main {
-      max-width: 720px; margin: 2rem auto;
-      padding: 0 1.25rem;
+    .quiz-main { max-width: 720px; margin: 2rem auto; padding: 0 1.25rem; }
+
+    /* ── Topic Selection Screen ───────────────────────────── */
+    #screen-topics { display: none; }
+    .topics-header { text-align: center; margin-bottom: 2rem; }
+    .topics-header h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.4rem; }
+    .topics-header p  { color: var(--text-2); font-size: 0.95rem; }
+    .topics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .topic-card {
+      background: var(--card); border: 2px solid var(--border);
+      border-radius: var(--r); padding: 1.5rem 1.25rem;
+      cursor: pointer; transition: var(--t);
+      display: flex; flex-direction: column; gap: 0.5rem;
+      animation: slideUp 0.25s ease;
+    }
+    .topic-card:hover {
+      border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-bg);
+      transform: translateY(-2px);
+    }
+    .topic-card-icon { font-size: 2rem; margin-bottom: 0.25rem; }
+    .topic-card-name { font-size: 1rem; font-weight: 700; color: var(--text); }
+    .topic-card-desc { font-size: 0.83rem; color: var(--text-2); line-height: 1.5; }
+    .topic-card-meta {
+      display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem;
+    }
+    .topic-card-meta span {
+      font-size: 0.75rem; background: var(--bg2); color: var(--text-2);
+      padding: 0.2rem 0.6rem; border-radius: 99px;
+    }
+    .topic-card.completed { border-color: var(--success); opacity: 0.75; }
+    .topic-card.completed:hover { border-color: var(--success); box-shadow: 0 0 0 4px rgba(34,197,94,0.1); }
+    .topic-done-badge {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      font-size: 0.75rem; font-weight: 600; color: var(--success);
+      background: rgba(34,197,94,0.1); padding: 0.2rem 0.6rem; border-radius: 99px;
     }
 
     /* ── Question Card ───────────────────────────────────── */
     .question-card {
       background: var(--card); border-radius: var(--r);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-md);
-      overflow: hidden;
-      animation: slideUp 0.28s ease;
+      border: 1px solid var(--border); box-shadow: var(--shadow-md);
+      overflow: hidden; animation: slideUp 0.28s ease;
     }
     .question-header {
       padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
@@ -67,12 +96,9 @@
     }
     .q-number {
       font-size: 0.75rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.06em;
-      color: var(--accent);
+      text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent);
     }
-    .q-progress {
-      font-size: 0.8rem; color: var(--muted); font-family: var(--mono);
-    }
+    .q-progress { font-size: 0.8rem; color: var(--muted); font-family: var(--mono); }
     .question-body { padding: 1.75rem 1.5rem; }
     .question-text {
       font-size: 1.05rem; font-weight: 600; color: var(--text);
@@ -80,9 +106,7 @@
     }
 
     /* ── Answer Options ──────────────────────────────────── */
-    .options-list {
-      display: flex; flex-direction: column; gap: 0.65rem;
-    }
+    .options-list { display: flex; flex-direction: column; gap: 0.65rem; }
     .option-item {
       display: flex; align-items: flex-start; gap: 0.75rem;
       padding: 1rem 1.1rem; border-radius: var(--r-sm);
@@ -91,10 +115,8 @@
       position: relative; user-select: none;
     }
     .option-item:hover { border-color: var(--accent-2); background: var(--accent-bg); }
-    .option-item.selected {
-      border-color: var(--accent); background: var(--accent-bg);
-    }
-    .option-item.locked { cursor: not-allowed; opacity: 0.6; }
+    .option-item.selected { border-color: var(--accent); background: var(--accent-bg); }
+    .option-item.locked   { cursor: not-allowed; opacity: 0.6; }
     .option-letter {
       width: 28px; height: 28px; border-radius: 50%;
       background: var(--bg2); border: 2px solid var(--border);
@@ -120,8 +142,7 @@
     .result-card {
       background: var(--card); border-radius: var(--r);
       border: 1px solid var(--border); box-shadow: var(--shadow-md);
-      padding: 2.5rem; text-align: center;
-      animation: slideUp 0.35s ease;
+      padding: 2.5rem; text-align: center; animation: slideUp 0.35s ease;
     }
     .result-breakdown { text-align: left; margin-top: 2rem; }
     .breakdown-item {
@@ -129,7 +150,7 @@
       display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
     }
     .breakdown-item:last-child { border-bottom: none; }
-    .breakdown-q { font-size: 0.875rem; color: var(--text); flex: 1; }
+    .breakdown-q    { font-size: 0.875rem; color: var(--text); flex: 1; }
     .breakdown-mark { font-size: 1.2rem; flex-shrink: 0; }
 
     /* ── Loading Screen ──────────────────────────────────── */
@@ -149,6 +170,7 @@
       .question-body { padding: 1.25rem 1rem; }
       .question-footer { flex-direction: column; gap: 0.75rem; }
       .question-footer .btn { width: 100%; }
+      .topics-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -159,7 +181,7 @@
   <div class="quiz-brand">Exam<span>iner</span></div>
   <div class="quiz-meta">
     <span class="student-info" id="student-name-display">Loading…</span>
-    <div>
+    <div id="timer-wrap" style="display:none">
       <div class="timer-display" id="timer-display">--:--</div>
       <span class="timer-label">remaining</span>
     </div>
@@ -177,7 +199,16 @@
   <!-- Loading state -->
   <div id="screen-loading">
     <div class="spinner spinner-lg"></div>
-    <p>Preparing your quiz…</p>
+    <p id="loading-msg">Preparing your quiz…</p>
+  </div>
+
+  <!-- Topic selection -->
+  <div id="screen-topics">
+    <div class="topics-header">
+      <h2>Choose a Topic</h2>
+      <p>Select the topic you want to be tested on. Each topic has its own question bank and timer.</p>
+    </div>
+    <div class="topics-grid" id="topics-grid"></div>
   </div>
 
   <!-- Error state -->
@@ -185,11 +216,15 @@
     <div style="font-size:3rem;margin-bottom:1rem">⚠️</div>
     <h2 id="error-title">Something went wrong</h2>
     <p id="error-msg" style="margin:0.75rem 0 1.5rem"></p>
-    <button class="btn btn-outline" onclick="window.location.href='index.html'">← Back to Login</button>
+    <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-outline" onclick="window.location.href='index.html'">← Back to Login</button>
+      <button class="btn btn-primary" id="btn-back-topics" style="display:none" onclick="showScreen('topics')">← Choose Another Topic</button>
+    </div>
   </div>
 
   <!-- Active quiz -->
   <div id="screen-quiz" style="display:none">
+    <div id="quiz-topic-label" style="font-size:0.8rem;font-weight:600;color:var(--accent);margin-bottom:0.75rem;text-align:center"></div>
     <div class="question-card" id="question-card">
       <div class="question-header">
         <span class="q-number" id="q-label">Question 1</span>
@@ -216,6 +251,7 @@
           <span class="score-num" id="score-num">—</span>
           <span class="score-lbl">score</span>
         </div>
+        <div id="result-topic-label" style="font-size:0.85rem;font-weight:600;color:var(--accent);margin-bottom:0.5rem"></div>
         <h2 id="result-title">Quiz Complete!</h2>
         <p id="result-sub" style="margin:0.5rem 0 1.5rem"></p>
         <div style="display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem">
@@ -223,6 +259,11 @@
           <div class="badge badge-success"><span>✓</span> <span id="res-correct"></span></div>
           <div class="badge badge-danger" id="res-wrong-badge"><span>✗</span> <span id="res-wrong"></span></div>
           <div class="badge badge-info"><span>⏱</span> <span id="res-time"></span></div>
+        </div>
+        <div style="display:flex;justify-content:center;margin-bottom:1rem">
+          <button class="btn btn-outline" id="btn-another-topic" style="display:none" onclick="showScreen('topics')">
+            ← Choose Another Topic
+          </button>
         </div>
       </div>
       <div class="result-breakdown" id="result-breakdown">
@@ -251,13 +292,18 @@ let serverStart   = null;
 let durationMs    = 10 * 60 * 1000;
 let timerInterval = null;
 let submitted     = false;
+let topics        = [];
+let courses       = [];
+let selectedTopicId = null;
+// Track completed topics for this session (for the topic selector UI)
+let completedTopics = {};
 
 // ─── Boot ────────────────────────────────────────────────────
 auth.onAuthStateChanged(async user => {
   if (!user) { window.location.href = 'index.html'; return; }
   currentUser = user;
   document.getElementById('student-name-display').textContent = user.displayName || user.email;
-  await startQuiz();
+  await initialize();
 });
 
 // ─── Disable navigation / back button ────────────────────────
@@ -267,35 +313,182 @@ window.addEventListener('popstate', () => {
   if (!submitted) showToast('You cannot go back during the quiz!', 'warning');
 });
 
-// ─── Start Quiz ──────────────────────────────────────────────
-async function startQuiz() {
+// ─── Initialize: load topics, decide what to show ────────────
+async function initialize() {
+  document.getElementById('loading-msg').textContent = 'Loading…';
   showScreen('loading');
   try {
+    const data = await loadTopicsAndCourses();
+    topics  = data.topics;
+    courses = data.courses;
+
+    if (topics.length === 0) {
+      // No topics configured — start quiz with all questions (legacy mode)
+      await startQuiz(null);
+    } else {
+      // Show topic selection screen
+      renderTopicSelection();
+      showScreen('topics');
+    }
+  } catch(err) {
+    console.error(err);
+    showError('Could Not Load', err.message || 'Please contact your teacher.');
+  }
+}
+
+// ─── Load topics and courses from Firestore ──────────────────
+async function loadTopicsAndCourses() {
+  const [tSnap, cSnap] = await Promise.all([
+    db.collection('topics').get(),
+    db.collection('courses').get()
+  ]);
+  
+  const allTopics = tSnap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(t => t.active !== false); // Client-side filter for simplicity since we get all
+    
+  const allCourses = cSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  
+  return { topics: allTopics, courses: allCourses };
+}
+
+// ─── Render topic selection cards ────────────────────────────
+function renderTopicSelection() {
+  const grid = document.getElementById('topics-grid');
+  grid.innerHTML = '';
+
+  if (topics.length === 0) {
+    grid.innerHTML = '<p style="text-align:center;color:var(--muted)">No topics available. Ask your teacher.</p>';
+    return;
+  }
+
+  // Create a container for the whole list
+  const container = document.createElement('div');
+  container.style.display = 'flex';
+  container.style.flexDirection = 'column';
+  container.style.gap = '2rem';
+  grid.appendChild(container);
+
+  // Group topics by course
+  const grouped = {};
+  topics.forEach(t => {
+    const cId = t.courseId || 'unassigned';
+    if (!grouped[cId]) grouped[cId] = [];
+    grouped[cId].push(t);
+  });
+
+  const icons = ['📘','📗','📙','📕','📓','📔','📒','📃'];
+  let iconIdx = 0;
+
+  // Render each course group
+  const sortedCourseIds = Object.keys(grouped).sort((a, b) => {
+    if (a === 'unassigned') return 1;
+    if (b === 'unassigned') return -1;
+    const ca = courses.find(c => c.id === a)?.name || '';
+    const cb = courses.find(c => c.id === b)?.name || '';
+    return ca.localeCompare(cb);
+  });
+
+  sortedCourseIds.forEach(cId => {
+    const courseTopics = grouped[cId];
+    const courseName   = cId === 'unassigned' ? 'General' : (courses.find(c => c.id === cId)?.name || 'Unknown Course');
+
+    const section = document.createElement('div');
+    section.innerHTML = `
+      <h3 style="margin-bottom:1rem;font-size:1.1rem;display:flex;align-items:center;gap:0.5rem;color:var(--text)">
+        <span style="width:4px;height:1.2rem;background:var(--accent);border-radius:2px"></span>
+        ${courseName}
+      </h3>
+      <div class="topics-grid-inner" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:1rem"></div>
+    `;
+    const innerGrid = section.querySelector('.topics-grid-inner');
+
+    courseTopics.forEach(t => {
+      const done  = completedTopics[t.id];
+      const card  = document.createElement('div');
+      card.className = 'topic-card' + (done ? ' completed' : '');
+      const settingsParts = [];
+      if (t.durationMinutes) settingsParts.push(`⏱ ${t.durationMinutes} min`);
+      if (t.numQuestions)    settingsParts.push(`📝 ${t.numQuestions} questions`);
+
+      card.innerHTML = `
+        <div class="topic-card-icon">${icons[iconIdx % icons.length]}</div>
+        <div class="topic-card-name">${t.name}</div>
+        ${t.description ? `<div class="topic-card-desc">${t.description}</div>` : ''}
+        <div class="topic-card-meta">
+          ${settingsParts.map(s => `<span>${s}</span>`).join('')}
+          ${done ? `<span class="topic-done-badge">✓ Completed — ${done}%</span>` : ''}
+        </div>`;
+      
+      iconIdx++;
+      card.onclick = () => selectTopic(t.id);
+      innerGrid.appendChild(card);
+    });
+
+    container.appendChild(section);
+  });
+
+  // Adjust the outer grid to not use grid display (we are using manual sections)
+  grid.style.display = 'block';
+}
+
+// ─── Student selects a topic ─────────────────────────────────
+async function selectTopic(topicId) {
+  selectedTopicId = topicId;
+  await startQuiz(topicId);
+}
+
+// ─── Start Quiz ──────────────────────────────────────────────
+async function startQuiz(topicId) {
+  showScreen('loading');
+  document.getElementById('loading-msg').textContent = 'Preparing your quiz…';
+  try {
     const assignFn = functions.httpsCallable('assignQuiz');
-    const result   = await assignFn({});
+    const result   = await assignFn({ topicId: topicId || null });
     const data     = result.data;
 
     sessionId   = data.sessionId;
     questions   = data.questions;
-    serverStart = data.startTime;  // epoch ms
+    serverStart = data.startTime;
     durationMs  = data.durationMinutes * 60 * 1000;
     answers     = data.answers || {};
 
+    // Show topic label in quiz header
+    if (data.topicName) {
+      document.getElementById('quiz-topic-label').textContent = `Topic: ${data.topicName}`;
+    }
+
     // If already submitted, show results
-    if (data.submitted) { await loadAndShowResult(); return; }
+    if (data.submitted) {
+      // Track this topic as completed for topic selector
+      if (topicId) completedTopics[topicId] = data.score;
+      showResult(data);
+      return;
+    }
 
     // Restore progress (in case of reload)
-    currentIndex = data.currentIndex || 0;
+    currentIndex = 0;
+    submitted    = false;
 
+    // Show timer
+    document.getElementById('timer-wrap').style.display = 'block';
     startTimer();
     renderQuestion();
     showScreen('quiz');
   } catch(err) {
     console.error(err);
-    showError(
-      err.code === 'functions/permission-denied' ? 'Access Denied' : 'Could Not Load Quiz',
-      err.message || 'Please contact your teacher.'
-    );
+    const code = err.code || '';
+
+    if (code === 'functions/permission-denied') {
+      showError('Access Denied', err.message || 'Your email is not approved. Contact your teacher.');
+    } else if (code === 'functions/failed-precondition') {
+      // Already has active quiz on another topic
+      showError('Active Quiz In Progress', err.message || 'Please finish your current quiz first.');
+      document.getElementById('btn-back-topics').style.display = topics.length > 0 ? 'inline-flex' : 'none';
+    } else {
+      showError('Could Not Load Quiz', err.message || 'Please contact your teacher.');
+      document.getElementById('btn-back-topics').style.display = topics.length > 0 ? 'inline-flex' : 'none';
+    }
   }
 }
 
@@ -329,7 +522,7 @@ function updateTimerDisplay(remaining) {
 
 // ─── Render Question ─────────────────────────────────────────
 function renderQuestion() {
-  const q   = questions[currentIndex];
+  const q     = questions[currentIndex];
   const total = questions.length;
 
   document.getElementById('q-label').textContent    = `Question ${currentIndex + 1}`;
@@ -339,7 +532,7 @@ function renderQuestion() {
 
   const optList = document.getElementById('options-list');
   optList.innerHTML = '';
-  const letters = ['A','B','C','D','E'];
+  const letters     = ['A','B','C','D','E'];
   const savedAnswer = answers[q.id];
 
   q.options.forEach((opt, i) => {
@@ -353,7 +546,6 @@ function renderQuestion() {
     optList.appendChild(item);
   });
 
-  // Update Next button
   const btnNext = document.getElementById('btn-next');
   const isLast  = currentIndex === total - 1;
   btnNext.textContent = isLast ? '✓ Submit Quiz' : 'Next →';
@@ -362,10 +554,9 @@ function renderQuestion() {
   document.getElementById('answer-hint').textContent =
     savedAnswer !== undefined ? 'Answer saved — you can change it before submitting' : 'Select an answer to continue';
 
-  // Animate card
   const card = document.getElementById('question-card');
   card.style.animation = 'none';
-  card.offsetHeight; // reflow
+  card.offsetHeight;
   card.style.animation = 'slideUp 0.25s ease';
 }
 
@@ -373,23 +564,19 @@ function renderQuestion() {
 async function selectOption(questionId, optionIndex) {
   if (submitted) return;
 
-  // Update local state
   answers[questionId] = optionIndex;
 
-  // Update UI
   document.querySelectorAll('.option-item').forEach(item => {
     item.classList.toggle('selected', parseInt(item.dataset.index) === optionIndex);
   });
   document.getElementById('btn-next').disabled = false;
   document.getElementById('answer-hint').textContent = 'Answer saved — you can change it before submitting';
 
-  // Save to Firestore (fire-and-forget, resilient)
   try {
     await db.collection('quizSessions').doc(sessionId).update({
       [`answers.${questionId}`]: optionIndex
     });
   } catch(e) {
-    // Will retry on next answer save; answers are also in memory
     console.warn('Answer save failed, will retry:', e.message);
   }
 }
@@ -419,7 +606,6 @@ async function submitQuiz(forced = false) {
   submitted = true;
   clearInterval(timerInterval);
 
-  // Show loading overlay
   const overlay = document.createElement('div');
   overlay.className = 'loading-overlay';
   overlay.innerHTML = `<div class="loading-box"><div class="spinner spinner-lg" style="margin:0 auto 1rem"></div><p style="color:var(--text-2)">Grading your quiz…</p></div>`;
@@ -429,6 +615,7 @@ async function submitQuiz(forced = false) {
     const gradeFn = functions.httpsCallable('gradeQuiz');
     const result  = await gradeFn({ sessionId });
     overlay.remove();
+    if (selectedTopicId) completedTopics[selectedTopicId] = result.data.score;
     showResult(result.data);
   } catch(err) {
     overlay.remove();
@@ -441,7 +628,6 @@ async function submitQuiz(forced = false) {
 function showResult(data) {
   const score = data.score;
 
-  // Score circle grade
   let grade = 'grade-f';
   if (score >= 80) grade = 'grade-a';
   else if (score >= 65) grade = 'grade-b';
@@ -451,12 +637,14 @@ function showResult(data) {
   circle.className = `score-circle ${grade}`;
   document.getElementById('score-num').textContent = `${score}%`;
 
-  // Titles
+  // Show topic name on result
+  const topicLabelEl = document.getElementById('result-topic-label');
+  topicLabelEl.textContent = data.topicName ? `Topic: ${data.topicName}` : '';
+
   const titles = { 'grade-a': '🎉 Excellent Work!', 'grade-b': '👍 Good Job!', 'grade-c': '📚 Keep Practicing', 'grade-f': '🔄 Try Again Next Time' };
   document.getElementById('result-title').textContent = titles[grade];
   document.getElementById('result-sub').textContent   = `You scored ${data.earnedPoints} out of ${data.totalPoints} points`;
 
-  // Stats badges
   document.getElementById('res-questions').textContent = `${data.totalQuestions} questions`;
   document.getElementById('res-correct').textContent   = `${data.correctCount} correct`;
   document.getElementById('res-wrong').textContent     = `${data.totalQuestions - data.correctCount} wrong`;
@@ -469,7 +657,10 @@ function showResult(data) {
     document.getElementById('result-header').prepend(el);
   }
 
-  // Breakdown
+  // Show "Choose Another Topic" button if topics exist
+  const anotherBtn = document.getElementById('btn-another-topic');
+  anotherBtn.style.display = topics.length > 1 ? 'inline-flex' : 'none';
+
   if (data.breakdown && data.breakdown.length > 0) {
     const list = document.getElementById('breakdown-list');
     list.innerHTML = '';
@@ -485,6 +676,7 @@ function showResult(data) {
     document.getElementById('result-breakdown').style.display = 'none';
   }
 
+  document.getElementById('timer-wrap').style.display = 'none';
   showScreen('result');
 }
 
@@ -500,10 +692,21 @@ async function loadAndShowResult() {
 
 // ─── UI Helpers ──────────────────────────────────────────────
 function showScreen(name) {
-  ['loading','error','quiz','result'].forEach(s => {
+  ['loading','topics','error','quiz','result'].forEach(s => {
     const el = document.getElementById(`screen-${s}`);
-    if (el) el.style.display = s === name ? (name === 'loading' ? 'flex' : 'block') : 'none';
+    if (!el) return;
+    if (s === name) {
+      el.style.display = s === 'loading' ? 'flex' : 'block';
+    } else {
+      el.style.display = 'none';
+    }
   });
+  // Reset error back-button visibility when not on error
+  if (name !== 'error') {
+    document.getElementById('btn-back-topics').style.display = 'none';
+  }
+  // Re-render topics in case completedTopics changed
+  if (name === 'topics') renderTopicSelection();
 }
 
 function showError(title, msg) {
