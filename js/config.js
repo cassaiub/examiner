@@ -3,20 +3,21 @@
 // ║  Firebase Console → Project Settings → Your apps         ║
 // ╚══════════════════════════════════════════════════════════╝
 const firebaseConfig = {
-  apiKey:            "AIzaSyA0CgD5YX4yQLvD06cNTLxQz6c713CoZOE",
-  authDomain:        "cassaquiz.firebaseapp.com",
-  projectId:         "cassaquiz",
-  storageBucket:     "cassaquiz.firebasestorage.app",
+  apiKey: "AIzaSyA0CgD5YX4yQLvD06cNTLxQz6c713CoZOE",
+  authDomain: "cassaquiz.firebaseapp.com",
+  projectId: "cassaquiz",
+  storageBucket: "cassaquiz.firebasestorage.app",
   messagingSenderId: "618377087169",
-  appId:             "1:618377087169:web:ec2d67506b76a41a2aac40"
+  appId: "1:618377087169:web:ec2d67506b76a41a2aac40"
 };
 
 // ╔══════════════════════════════════════════════════════════╗
 // ║  STEP 2 — Set your teacher / admin email(s)              ║
 // ╚══════════════════════════════════════════════════════════╝
 const TEACHER_EMAILS = [
-  "kasad@iub.edu.bd"
-  // Add more teacher emails here
+  "kasad@iub.edu.bd",
+  "uddinsa@iub.edu.bd"
+  // Add more teacher emails here 
 ];
 
 // ╔══════════════════════════════════════════════════════════╗
@@ -24,20 +25,20 @@ const TEACHER_EMAILS = [
 // ╚══════════════════════════════════════════════════════════╝
 const APP_CONFIG = {
   quizDurationMinutes: 10,
-  questionsPerQuiz:    15,
-  appName:             "Examiner",
-  institutionName:     "Your Institution"
+  questionsPerQuiz: 15,
+  appName: "Examiner",
+  institutionName: "Your Institution"
 };
 
 // ─── Initialize Firebase ────────────────────────────────────
 firebase.initializeApp(firebaseConfig);
 
-const auth      = firebase.auth();
-const db        = firebase.firestore();
+const auth = firebase.auth();
+const db = firebase.firestore();
 const functions = firebase.functions();
 
 // Enable offline persistence (helps on mobile)
-db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+db.enablePersistence({ synchronizeTabs: true }).catch(() => { });
 
 // ─── Utility: check if current user is teacher ─────────────
 function isTeacher(email) {
@@ -94,7 +95,7 @@ function confirmDialog(message) {
       </div>`;
     document.body.appendChild(backdrop);
     backdrop.querySelector('#confirm-yes').onclick = () => { backdrop.remove(); resolve(true); };
-    backdrop.querySelector('#confirm-no').onclick  = () => { backdrop.remove(); resolve(false); };
+    backdrop.querySelector('#confirm-no').onclick = () => { backdrop.remove(); resolve(false); };
   });
 }
 
@@ -102,12 +103,12 @@ function confirmDialog(message) {
 function formatTime(seconds) {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
-  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 // ─── Format date ─────────────────────────────────────────────
 function formatDate(timestamp) {
   if (!timestamp) return '—';
   const d = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-  return d.toLocaleString('en-US', { month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  return d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
