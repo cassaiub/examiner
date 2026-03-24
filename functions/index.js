@@ -69,6 +69,8 @@ async function gradeSession(session, sessionId) {
     studentEmail:     session.studentEmail,
     studentName:      session.studentName || session.studentEmail,
     studentSection:   session.studentSection || null,
+    studentCourseId:  session.studentCourseId || null,
+    studentCourseName:session.studentCourseName || null,
     studentUid:       session.studentUid,
     score,
     earnedPoints,
@@ -119,6 +121,8 @@ exports.assignQuiz = functions.https.onCall(async (data, context) => {
   }
   const studentName = allowedDoc.data().name || email;
   const studentSection = allowedDoc.data().section || null;
+  const studentCourseId = allowedDoc.data().courseId || null;
+  const studentCourseName = allowedDoc.data().courseName || null;
 
   // ── Validate topic (if provided) ─────────────────────────
   let topicData = null;
@@ -274,6 +278,8 @@ exports.assignQuiz = functions.https.onCall(async (data, context) => {
     studentUid:      uid,
     studentName,
     studentSection,
+    studentCourseId,
+    studentCourseName,
     questionIds,
     clientQuestions,
     answers:         {},
@@ -299,6 +305,8 @@ exports.assignQuiz = functions.https.onCall(async (data, context) => {
     topicId:         topicId                       || null,
     topicName:       (topicData && topicData.name) || null,
     studentSection:  studentSection,
+    studentCourseId: studentCourseId,
+    studentCourseName: studentCourseName,
   };
 });
 

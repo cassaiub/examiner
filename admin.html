@@ -192,7 +192,22 @@
             <button class="btn btn-accent btn-sm" onclick="openAddEmail()">+ Add Email</button>
           </div>
         </div>
+        </div>
         <div class="section-body">
+          <div style="display:flex;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap">
+            <div style="flex:1;min-width:180px">
+              <label class="form-label" style="font-size:0.75rem">Filter by Course</label>
+              <select class="form-input" id="filter-email-course" onchange="renderEmails()" style="padding:0.35rem 0.6rem;font-size:0.85rem">
+                <option value="">All Courses</option>
+              </select>
+            </div>
+            <div style="flex:1;min-width:140px">
+              <label class="form-label" style="font-size:0.75rem">Filter by Section</label>
+              <select class="form-input" id="filter-email-section" onchange="renderEmails()" style="padding:0.35rem 0.6rem;font-size:0.85rem">
+                <option value="">All Sections</option>
+              </select>
+            </div>
+          </div>
           <div id="emails-bulk-actions" class="hidden" style="margin-bottom:0.75rem;padding-left:0.5rem">
             <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;cursor:pointer">
               <input type="checkbox" id="select-all-emails" onclick="toggleSelectAllStudents()">
@@ -357,6 +372,12 @@
         <input type="text" class="form-input" id="email-name" placeholder="Student full name">
       </div>
       <div class="form-group">
+        <label class="form-label">Course <span style="color:var(--danger)">*</span></label>
+        <select class="form-input" id="email-course">
+          <option value="">— Select a course —</option>
+        </select>
+      </div>
+      <div class="form-group">
         <label class="form-label">Email Address</label>
         <input type="email" class="form-input" id="email-addr" placeholder="student@example.com">
       </div>
@@ -499,14 +520,20 @@ function renderCourses() {
 function populateCourseDropdowns() {
   const tCourseSelect = document.getElementById('topic-course');
   const qCourseSelect = document.getElementById('q-course');
-  [tCourseSelect, qCourseSelect].forEach(select => {
-    select.innerHTML = '<option value="">— Select a course —</option>';
+  const eCourseSelect = document.getElementById('email-course');
+  const fCourseSelect = document.getElementById('filter-email-course');
+  
+  [tCourseSelect, qCourseSelect, eCourseSelect, fCourseSelect].forEach(select => {
+    if (!select) return;
+    const currentVal = select.value;
+    select.innerHTML = select.id.startsWith('filter') ? '<option value="">All Courses</option>' : '<option value="">— Select a course —</option>';
     courses.forEach(c => {
       const opt = document.createElement('option');
       opt.value = c.id;
       opt.textContent = c.name;
       select.appendChild(opt);
     });
+    select.value = currentVal;
   });
 }
 
@@ -912,13 +939,36 @@ async function loadEmails() {
 function renderEmails() {
   const el    = document.getElementById('emails-list');
   const count = document.getElementById('email-count');
-  count.textContent = emails.length;
   
+  // Update section filter dropdown based on current data
+  const sectionSelect = document.getElementById('filter-email-section');
+  const currentSectionFilter = sectionSelect.value;
+  const sections = [...new Set(emails.map(e => e.section).filter(Boolean))].sort();
+  sectionSelect.innerHTML = '<option value="">All Sections</option>';
+  sections.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = `Section ${s}`;
+    sectionSelect.appendChild(opt);
+  });
+  sectionSelect.value = currentSectionFilter;
+
+  // Apply filters
+  const courseFilter  = document.getElementById('filter-email-course').value;
+  const sectionFilter = document.getElementById('filter-email-section').value;
+  
+  const filtered = emails.filter(e => {
+    const matchCourse  = !courseFilter  || e.courseId === courseFilter;
+    const matchSection = !sectionFilter || e.section  === sectionFilter;
+    return matchCourse && matchSection;
+  });
+
   const bulkActions = document.getElementById('emails-bulk-actions');
   const bulkDelete  = document.getElementById('btn-bulk-delete-emails');
-  
-  if (emails.length === 0) {
-    el.innerHTML = '<div class="empty-msg">No students added yet.</div>';
+
+  count.textContent = filtered.length;
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="empty-msg">No students match the filters.</div>';
     bulkActions.classList.add('hidden');
     bulkDelete.classList.add('hidden');
     return;
@@ -926,7 +976,7 @@ function renderEmails() {
   
   bulkActions.classList.remove('hidden');
   el.innerHTML = '';
-  emails.forEach(e => {
+  filtered.forEach(e => {
     const div = document.createElement('div');
     div.className = 'email-item';
     div.innerHTML = `
@@ -934,7 +984,7 @@ function renderEmails() {
         <input type="checkbox" class="email-select" data-id="${e.id}" onclick="updateBulkDeleteBtn()">
         <div class="email-info">
           <span class="email-addr">${e.name || 'Unknown'}</span>
-          <span class="email-meta">${e.id}${e.section ? ` · Sec ${e.section}` : ''}</span>
+          <span class="email-meta">${e.id}${e.courseName ? ` · ${e.courseName}` : ''}${e.section ? ` · Sec ${e.section}` : ''}</span>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:0.5rem">
@@ -986,18 +1036,27 @@ async function deleteSelectedStudents() {
 function openAddEmail() {
   document.getElementById('email-name').value = '';
   document.getElementById('email-addr').value = '';
+  document.getElementById('email-course').value = '';
   document.getElementById('email-section').value = '';
   openModal('modal-email');
 }
 
 async function saveEmail() {
-  const name    = document.getElementById('email-name').value.trim();
-  const email   = document.getElementById('email-addr').value.trim().toLowerCase();
-  const section = document.getElementById('email-section').value.trim();
+  const name     = document.getElementById('email-name').value.trim();
+  const email    = document.getElementById('email-addr').value.trim().toLowerCase();
+  const courseId = document.getElementById('email-course').value;
+  const section  = document.getElementById('email-section').value.trim();
+  
   if (!email || !email.includes('@')) { showToast('Enter a valid email', 'error'); return; }
+  if (!courseId) { showToast('Please select a course', 'error'); return; }
+  
+  const courseName = courses.find(c => c.id === courseId)?.name || null;
+  
   try {
     await db.collection('allowedEmails').doc(email).set({ 
-      name: name || email, 
+      name: name || email,
+      courseId,
+      courseName,
       section: section || null,
       role: 'student', 
       addedAt: firebase.firestore.FieldValue.serverTimestamp() 
@@ -1052,7 +1111,7 @@ function openEmailImportModal() {
     <div class="alert alert-info">
       <div>
         <strong>CSV Format for Students:</strong><br>
-        <code style="font-size:0.78rem">name,email,section</code>
+        <code style="font-size:0.78rem">name,email,courseName,section</code>
       </div>
     </div>`;
   document.getElementById('import-topic-row').classList.add('hidden');
@@ -1082,12 +1141,13 @@ function handleCSVFile(event) {
       parsed = lines.slice(1).map(line => {
         const cols = parseCSVLine(line);
         return { 
-          name: cols[0]?.trim(), 
-          email: cols[1]?.trim().toLowerCase(),
-          section: cols[2]?.trim() || null
+          name:       cols[0]?.trim(), 
+          email:      cols[1]?.trim().toLowerCase(),
+          courseName: cols[2]?.trim(),
+          section:    cols[3]?.trim() || null
         };
       }).filter(e => e.email && e.email.includes('@'));
-      preview = parsed.map(e => `${e.name} <${e.email}> ${e.section ? `[Sec ${e.section}]` : ''}`).join('\n');
+      preview = parsed.map(e => `${e.name} <${e.email}> ${e.courseName || ''} ${e.section ? `[Sec ${e.section}]` : ''}`).join('\n');
     }
 
     importData = parsed;
@@ -1129,8 +1189,11 @@ async function confirmImport() {
     } else {
       importData.forEach(e => {
         const ref = db.collection('allowedEmails').doc(e.email);
+        const course = courses.find(c => c.name.toLowerCase() === (e.courseName||'').toLowerCase());
         batch.set(ref, { 
           name: e.name, 
+          courseId: course?.id || null,
+          courseName: course?.name || e.courseName || null,
           section: e.section || null,
           role: 'student', 
           addedAt: firebase.firestore.FieldValue.serverTimestamp() 
